@@ -316,6 +316,35 @@ let selectedPilots = new Set();
 let customPilots = [];
 let selected = new Set();
 
+// ── Android back-button handling ─────────────────────────────────────────────
+let suppressOverlayHistory = false;
+
+function pushOverlayState(name) {
+  history.pushState({ uflyOverlay: name }, '');
+}
+
+function popOverlayHistory() {
+  if (!suppressOverlayHistory && history.state && history.state.uflyOverlay) {
+    history.back();
+  }
+}
+
+function closeTopOverlay() {
+  const sendPanel = document.getElementById('send-panel');
+  const modal = document.getElementById('modal');
+  const settingsModal = document.getElementById('settings-modal');
+  if (sendPanel && sendPanel.classList.contains('open')) { closeSend(); return true; }
+  if (modal && modal.classList.contains('open')) { closeModal(); return true; }
+  if (settingsModal && settingsModal.style.display === 'flex') { closeSettings(); return true; }
+  return false;
+}
+
+window.addEventListener('popstate', () => {
+  suppressOverlayHistory = true;
+  closeTopOverlay();
+  suppressOverlayHistory = false;
+});
+
 function toggleSel(id) { selected.has(id) ? selected.delete(id) : selected.add(id); render(); }
 function selectAll() { getFiltered().forEach(f => selected.add(f.id)); render(); }
 function clearSel() { selected.clear(); render(); }
@@ -719,6 +748,7 @@ function openAdd() {
   customPilots = [];
   renderPilotsList();
   document.getElementById('modal').classList.add('open');
+  pushOverlayState('modal');
 }
 
 function openEdit(id) {
@@ -742,9 +772,10 @@ function openEdit(id) {
   customPilots = savedPilots.filter(n => !BASE_PILOTS.includes(n));
   renderPilotsList();
   document.getElementById('modal').classList.add('open');
+  pushOverlayState('modal');
 }
 
-function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); popOverlayHistory(); }
 
 async function saveForm() {
   const date = document.getElementById('f-date').value;
@@ -838,8 +869,9 @@ function openSend(id) {
   }).join('');
 
   document.getElementById('send-panel').classList.add('open');
+  pushOverlayState('send');
 }
-function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
+function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; popOverlayHistory(); }
 
 // ── Postpone due to weather ──────────────────────────────────────────────────
 function openPostpone(id) {
@@ -858,6 +890,7 @@ function openPostpone(id) {
       <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
     </div>`;
   document.getElementById('send-panel').classList.add('open');
+  pushOverlayState('send');
 }
 
 // ── Send to pilots ───────────────────────────────────────────────────────────
@@ -912,6 +945,7 @@ function openSendPilots() {
   document.getElementById('send-title').textContent = `📤 שליחה לטייסים`;
   renderSendPilotsBody();
   document.getElementById('send-panel').classList.add('open');
+  pushOverlayState('send');
 }
 
 function copyMsg(key) {
@@ -933,8 +967,9 @@ function openSettings() {
   document.getElementById('settings-template-pilots').value = settings.pilotMsgTemplate || '';
   renderPilotPhonesList();
   document.getElementById('settings-modal').style.display = 'flex';
+  pushOverlayState('settings');
 }
-function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; popOverlayHistory(); }
 function renderPilotPhonesList() {
   const allPilots = [...BASE_PILOTS, ...customPilots];
   const container = document.getElementById('pilot-phones-list');
