@@ -308,7 +308,7 @@ const DEFAULT_SETTINGS = {
 `מיקום המנחת:
 {קישור_מיקום}`,
   pilotMsgTemplate:
-`היי אחי :) פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`
+`היי {שם_טייס} :) פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
@@ -732,23 +732,44 @@ function openSend(id) {
 function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
 
 // ── Send to pilots ───────────────────────────────────────────────────────────
-function buildPilotMsg() {
+let sendPilotName = '';
+
+function buildPilotMsg(pilotName) {
   const list = flights.filter(f => selected.has(f.id)).slice().sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-  return list.map(f => fillTemplate(settings.pilotMsgTemplate || '', f)).join('\n\n');
+  return list.map(f => fillTemplate(settings.pilotMsgTemplate || '', f).replaceAll('{שם_טייס}', pilotName || 'טייס')).join('\n\n');
 }
 
-function openSendPilots() {
-  if (selected.size === 0) return;
-  const msg = buildPilotMsg();
+function renderSendPilotsBody() {
+  const allPilots = [...BASE_PILOTS, ...customPilots];
+  const msg = buildPilotMsg(sendPilotName);
   const waHref = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  document.getElementById('send-title').textContent = `📤 שליחה לטייסים`;
   document.getElementById('send-body').innerHTML = `
+    <div class="send-section-title">בחרי טייס לפנייה</div>
+    <div class="opt-list">${allPilots.map(name => `
+      <div class="opt-item${sendPilotName===name?' selected':''}" onclick="selectSendPilot('${name.replace(/'/g,"\\'")}')">
+        <div class="opt-check">${sendPilotName===name?'✓':''}</div>
+        <span class="opt-name">${name}</span>
+      </div>`).join('')}
+    </div>
     <div class="send-section-title">הודעה לטייסים (${selected.size} טיסות נבחרו)</div>
     <div class="msg-preview" id="msg-preview-pilots">${msg.replace(/</g,'&lt;')}</div>
     <div class="send-btns">
       <button class="btn-copy" id="btn-copy-pilots" onclick="copyMsg('pilots')">📋 העתק</button>
       <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
     </div>`;
+}
+
+function selectSendPilot(name) {
+  sendPilotName = name;
+  renderSendPilotsBody();
+}
+
+function openSendPilots() {
+  if (selected.size === 0) return;
+  const allPilots = [...BASE_PILOTS, ...customPilots];
+  if (!allPilots.includes(sendPilotName)) sendPilotName = allPilots[0] || '';
+  document.getElementById('send-title').textContent = `📤 שליחה לטייסים`;
+  renderSendPilotsBody();
   document.getElementById('send-panel').classList.add('open');
 }
 
