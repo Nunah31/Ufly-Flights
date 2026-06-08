@@ -169,8 +169,6 @@
   <div class="filters" id="filters">
     <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
     <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
-    <button class="filter-btn" data-filter="confirmed" onclick="setFilter(this,'confirmed')">מאושרות</button>
-    <button class="filter-btn" data-filter="pending" onclick="setFilter(this,'pending')">ממתינות</button>
     <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
   </div>
 
@@ -226,15 +224,6 @@
         <div class="opt-list" id="options-list"></div>
       </div>
 
-      <div class="field"><label>סטטוס</label>
-        <select id="f-status">
-          <option value="pending">ממתין לאישור ⏳</option>
-          <option value="confirmed">מאושר 👍</option>
-          <option value="done">בוצע ✅</option>
-          <option value="cancelled">בוטל ❌</option>
-        </select>
-      </div>
-
       <div class="field form-full">
         <label>🧑‍✈️ טייסים</label>
         <div class="opt-list" id="pilots-list"></div>
@@ -286,13 +275,6 @@ const OPTIONS_CFG = [
 
 const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
-const STATUS_CFG = {
-  confirmed: { label:'מאושר 👍',       bg:'#DBEAFE', text:'#1E40AF', border:'#93C5FD' },
-  pending:   { label:'ממתין לאישור ⏳', bg:'#FEF9C3', text:'#854D0E', border:'#FDE047' },
-  done:      { label:'בוצע ✅',         bg:'#DCFCE7', text:'#166534', border:'#86EFAC' },
-  cancelled: { label:'בוטל ❌',         bg:'#F1F5F9', text:'#475569', border:'#CBD5E1' },
-};
-
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
   locationLink: 'https://waze.com/ul/hsv8ze3669',
@@ -312,6 +294,12 @@ const DEFAULT_SETTINGS = {
   msgTemplateLocation:
 `מיקום המנחת:
 {קישור_מיקום}`,
+  msgTemplatePostpone:
+`היי {שם},
+לצערנו עקב תנאי מזג אוויר לא מתאימים לא נוכל לקיים כרגע את הטיסה המתוכננת ל{תאריך} בשעה {שעה}.
+חשוב לנו להדגיש - הטיסה לא מתבטלת! נדחה אותה למועד אחר שיתאים לשנינו ושמזג האוויר יאפשר טיסה בטוחה ונעימה.
+ניצור איתך קשר בהקדם לתיאום מועד חדש.
+תודה על ההבנה! 🙏`,
   pilotMsgTemplate:
 `היי {שם_טייס} :) פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`,
   pilotPhones: {}
@@ -514,8 +502,6 @@ function getFiltered() {
   let list = [...flights].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
   if (currentFilter==='future')    return list.filter(f => f.date >= today);
   if (currentFilter==='past')      return list.filter(f => f.date < today);
-  if (currentFilter==='confirmed') return list.filter(f => f.status === 'confirmed');
-  if (currentFilter==='pending')   return list.filter(f => f.status === 'pending');
   return list;
 }
 
@@ -540,7 +526,6 @@ function render() {
   if (list.length === 0) { el.innerHTML = '<p class="empty">אין טיסות בסינון זה</p>'; return; }
 
   el.innerHTML = list.map(f => {
-    const s = STATUS_CFG[f.status] || STATUS_CFG.pending;
     const isPast = f.date < today;
     const optsStr = includesLabel(f);
     const isSel = selected.has(f.id);
@@ -551,7 +536,6 @@ function render() {
         <div class="card-content" onclick="toggleSel(${f.id})">
           <div class="card-top">
             <span class="card-date">${fmtDate(f.date)}${f.time ? ' · ' + f.time : ''}</span>
-            <span class="badge" style="background:${s.bg};color:${s.text};border-color:${s.border}">${s.label}</span>
             <span class="dur-badge">⏱️ ${f.duration} דק׳</span>
             ${f.count > 1 ? `<span class="dur-badge">🔁 ${f.count} טיסות</span>` : ''}
           </div>
@@ -564,6 +548,7 @@ function render() {
           <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
           <button class="icon-btn" onclick="handleCalClick(${f.id})" title="${f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calEventId?'📅✅':'📅'}</button>
           <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
+          <button class="icon-btn" onclick="openPostpone(${f.id})" title="דחיית טיסה עקב מזג אוויר">🌧️</button>
         </div>
       </div>
     </div>`;
@@ -637,7 +622,6 @@ function openAdd() {
   document.getElementById('btn-save').textContent = '➕ הוסף טיסה';
   document.getElementById('btn-delete').style.display = 'none';
   ['f-date','f-time','f-contact','f-phone','f-notes'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-status').value = 'pending';
   setDuration(20);
   setCount(1);
   selectedOptions = new Set();
@@ -659,7 +643,6 @@ function openEdit(id) {
   document.getElementById('f-time').value = f.time || '';
   document.getElementById('f-contact').value = f.contact || '';
   document.getElementById('f-phone').value = f.phone || '';
-  document.getElementById('f-status').value = f.status || 'pending';
   document.getElementById('f-notes').value = f.notes || '';
   setDuration(f.duration || 20);
   setCount(f.count || 1);
@@ -685,7 +668,6 @@ async function saveForm() {
     date, time, contact, phone,
     duration: formDuration,
     count: formCount,
-    status: document.getElementById('f-status').value,
     notes: document.getElementById('f-notes').value.trim(),
     pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
@@ -768,6 +750,25 @@ function openSend(id) {
 }
 function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
 
+// ── Postpone due to weather ──────────────────────────────────────────────────
+function openPostpone(id) {
+  const f = flights.find(x => x.id === id);
+  if (!f) return;
+  sendFlightId = id;
+  document.getElementById('send-title').textContent = `🌧️ דחיית טיסה ל${f.contact}`;
+  const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
+  const msg = fillTemplate(settings.msgTemplatePostpone || '', f);
+  const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
+  document.getElementById('send-body').innerHTML = `
+    <div class="send-section-title">🌧️ הודעת דחייה עקב מזג אוויר</div>
+    <div class="msg-preview" id="msg-preview-postpone">${msg.replace(/</g,'&lt;')}</div>
+    <div class="send-btns">
+      <button class="btn-copy" id="btn-copy-postpone" onclick="copyMsg('postpone')">📋 העתק</button>
+      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
+    </div>`;
+  document.getElementById('send-panel').classList.add('open');
+}
+
 // ── Send to pilots ───────────────────────────────────────────────────────────
 let sendPilotNames = new Set();
 
@@ -837,6 +838,7 @@ function openSettings() {
   document.getElementById('settings-template-details').value = settings.msgTemplateDetails || '';
   document.getElementById('settings-template-terms').value = settings.msgTemplateTerms || '';
   document.getElementById('settings-template-location').value = settings.msgTemplateLocation || '';
+  document.getElementById('settings-template-postpone').value = settings.msgTemplatePostpone || '';
   document.getElementById('settings-template-pilots').value = settings.pilotMsgTemplate || '';
   renderPilotPhonesList();
   document.getElementById('settings-modal').style.display = 'flex';
@@ -864,6 +866,7 @@ function saveSettings() {
   settings.msgTemplateDetails = document.getElementById('settings-template-details').value;
   settings.msgTemplateTerms = document.getElementById('settings-template-terms').value;
   settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
+  settings.msgTemplatePostpone = document.getElementById('settings-template-postpone').value;
   settings.pilotMsgTemplate = document.getElementById('settings-template-pilots').value;
   const phones = {};
   document.querySelectorAll('.pilot-phone-input').forEach(inp => {
@@ -944,6 +947,9 @@ if (!localStorage.getItem('gh_token')) {
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 3 — מיקום המנחת</label>
     <textarea id="settings-template-location" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🌧️ הודעה — דחיית טיסה עקב מזג אוויר</label>
+    <textarea id="settings-template-postpone" rows="6" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🧑‍✈️ הודעה לטייסים (לכל טיסה נבחרת)</label>
     <textarea id="settings-template-pilots" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
