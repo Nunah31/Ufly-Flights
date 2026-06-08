@@ -48,5 +48,20 @@
     "pilotDay": false,
     "id": 3,
     "calEventId": "mhduun0l0v60gp0old2vuspdms"
+  },
+  {
+    "date": "2026-07-17",
+    "time": "19:00",
+    "contact": "דניאל מלאכוב",
+    "phone": "972 54-740-3073",
+    "duration": 40,
+    "count": 1,
+    "notes": "",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 4,
+    "calEventId": null
   }
 ]
