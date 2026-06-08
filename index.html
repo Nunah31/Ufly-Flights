@@ -79,6 +79,7 @@
   .field textarea { resize: vertical; line-height: 1.5; }
 
   .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .toggle-row-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); }
   .toggle-opt { flex: 1; min-width: 60px; padding: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; font-weight: 500; }
   .toggle-opt.active { background: #0EA5E9; color: white; font-weight: 700; }
 
@@ -210,12 +211,18 @@
       </div>
 
       <div class="field form-full"><label>מספר טיסות</label>
-        <div class="toggle-row" id="count-row">
+        <div class="toggle-row toggle-row-grid4" id="count-row">
           <button class="toggle-opt" data-c="1" onclick="setCount(1)">1</button>
           <button class="toggle-opt" data-c="2" onclick="setCount(2)">2</button>
           <button class="toggle-opt" data-c="3" onclick="setCount(3)">3</button>
           <button class="toggle-opt" data-c="4" onclick="setCount(4)">4</button>
           <button class="toggle-opt" data-c="5" onclick="setCount(5)">5</button>
+          <button class="toggle-opt" data-c="6" onclick="setCount(6)">6</button>
+          <button class="toggle-opt" data-c="7" onclick="setCount(7)">7</button>
+          <button class="toggle-opt" data-c="other" onclick="chooseCountOther()">אחר</button>
+        </div>
+        <div id="count-other-wrap" style="display:none;margin-top:8px">
+          <input type="number" id="count-other-input" min="1" placeholder="הזיני מספר טיסות" oninput="onCountOtherInput(this.value)" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;text-align:center">
         </div>
       </div>
 
@@ -723,7 +730,33 @@ function setDuration(d) {
 
 function setCount(c) {
   formCount = c;
-  document.querySelectorAll('#count-row .toggle-opt').forEach(b => b.classList.toggle('active', parseInt(b.dataset.c) === c));
+  document.querySelectorAll('#count-row .toggle-opt[data-c]').forEach(b => b.classList.toggle('active', b.dataset.c !== 'other' && parseInt(b.dataset.c) === c));
+  document.getElementById('count-other-wrap').style.display = 'none';
+}
+
+function chooseCountOther() {
+  document.querySelectorAll('#count-row .toggle-opt[data-c]').forEach(b => b.classList.remove('active'));
+  document.querySelector('#count-row .toggle-opt[data-c="other"]').classList.add('active');
+  const wrap = document.getElementById('count-other-wrap');
+  wrap.style.display = 'block';
+  const inp = document.getElementById('count-other-input');
+  if (!inp.value) inp.value = 8;
+  formCount = Math.max(1, parseInt(inp.value) || 8);
+  inp.focus();
+}
+
+function onCountOtherInput(v) {
+  formCount = Math.max(1, parseInt(v) || 1);
+}
+
+function applyCount(c) {
+  if (c >= 1 && c <= 7) {
+    setCount(c);
+  } else {
+    chooseCountOther();
+    document.getElementById('count-other-input').value = c;
+    formCount = c;
+  }
 }
 
 // ── Filters ──────────────────────────────────────────────────────────────────
@@ -742,7 +775,7 @@ function openAdd() {
   document.getElementById('btn-delete').style.display = 'none';
   ['f-date','f-time','f-contact','f-phone','f-notes'].forEach(id => document.getElementById(id).value = '');
   setDuration(20);
-  setCount(1);
+  applyCount(1);
   selectedOptions = new Set();
   renderOptionsList();
   selectedPilots = new Set();
@@ -765,7 +798,7 @@ function openEdit(id) {
   document.getElementById('f-phone').value = f.phone || '';
   document.getElementById('f-notes').value = f.notes || '';
   setDuration(f.duration || 20);
-  setCount(f.count || 1);
+  applyCount(f.count || 1);
   selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
   renderOptionsList();
   const savedPilots = f.pilots || [];
