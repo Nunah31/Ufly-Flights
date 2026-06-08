@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "date": "2026-06-08",
+    "time": "21:00",
+    "contact": "סלין דיון",
+    "phone": "0548927474",
+    "duration": 40,
+    "count": 3,
+    "notes": "",
+    "pilots": [
+      "דור",
+      "אביעד"
+    ],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": true,
+    "id": 1,
+    "calEventId": null
+  }
+]
