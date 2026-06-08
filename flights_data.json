@@ -13,20 +13,5 @@
     "pilotDay": false,
     "id": 2,
     "calEventId": "me4g6k5iaejekkdrcu2f4dc0qo"
-  },
-  {
-    "date": "2026-06-09",
-    "time": "19:59",
-    "contact": "יואל הברי",
-    "phone": "0548927474",
-    "duration": 40,
-    "count": 1,
-    "notes": "",
-    "pilots": [],
-    "photo": false,
-    "photo360": true,
-    "pilotDay": false,
-    "id": 3,
-    "calEventId": "ro77omj9e9fmhou7lvcenb0g7s"
   }
 ]
