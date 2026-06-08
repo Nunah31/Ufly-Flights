@@ -30,11 +30,22 @@
   .filter-btn { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; transition: all 0.15s; }
   .filter-btn.active { background: #0EA5E9; color: white; font-weight: 600; }
 
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .btn-sm { padding: 7px 14px; border-radius: 8px; font-size: 15px; cursor: pointer; font-family: inherit; border: none; }
+  .btn-outline-blue { background: white; border: 1px solid #0EA5E9; color: #0EA5E9; }
+  .btn-outline-red  { background: white; border: 1px solid #EF4444; color: #EF4444; }
+  .btn-solid-blue   { background: #0EA5E9; border: none; color: white; font-weight: 700; }
+
   .flights-list { display: flex; flex-direction: column; gap: 8px; }
 
   .flight-card { background: white; border-radius: 12px; border: 2px solid transparent; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.12s; }
+  .flight-card.selected { border-color: #0EA5E9; box-shadow: 0 0 0 4px rgba(14,165,233,0.08); }
   .flight-card.past { opacity: 0.65; }
   .card-body { padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+
+  .checkbox { width: 22px; height: 22px; border-radius: 5px; border: 2px solid #CBD5E1; background: white; flex-shrink: 0; margin-top: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+  .checkbox.checked { background: #0EA5E9; border-color: #0EA5E9; }
+  .checkbox.checked::after { content: '✓'; color: white; font-size: 14px; line-height: 1; }
 
   .card-content { flex: 1; cursor: pointer; min-width: 0; }
   .card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -109,6 +120,7 @@
     .header p { font-size: 17px; }
     .btn-export, .btn-add { font-size: 17px; padding: 12px 18px; }
     .filter-btn { font-size: 17px; padding: 9px 16px; }
+    .btn-sm { font-size: 17px; padding: 9px 16px; }
     .card-date { font-size: 22px; }
     .badge { font-size: 15px; padding: 4px 11px; }
     .dur-badge { font-size: 15px; padding: 4px 9px; }
@@ -160,6 +172,13 @@
     <button class="filter-btn" data-filter="confirmed" onclick="setFilter(this,'confirmed')">מאושרות</button>
     <button class="filter-btn" data-filter="pending" onclick="setFilter(this,'pending')">ממתינות</button>
     <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
+    <button class="btn-sm btn-outline-red" id="btn-clear" style="display:none" onclick="clearSel()">נקה בחירה</button>
+    <button class="btn-sm btn-solid-blue" id="btn-send-pilots" style="display:none" onclick="openSendPilots()">📤 שלח לטייסים</button>
   </div>
 
   <!-- List -->
@@ -287,7 +306,9 @@ const DEFAULT_SETTINGS = {
 {קישור_תנאים}`,
   msgTemplateLocation:
 `מיקום המנחת:
-{קישור_מיקום}`
+{קישור_מיקום}`,
+  pilotMsgTemplate:
+`היי אחי 🙂 פנוי לטיסה ב-{תאריך}, משך {משך} דקות, שעה {שעה}?`
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
@@ -300,6 +321,11 @@ let formCount = 1;
 let selectedOptions = new Set();
 let selectedPilots = new Set();
 let customPilots = [];
+let selected = new Set();
+
+function toggleSel(id) { selected.has(id) ? selected.delete(id) : selected.add(id); render(); }
+function selectAll() { getFiltered().forEach(f => selected.add(f.id)); render(); }
+function clearSel() { selected.clear(); render(); }
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 function loadFlights() {
@@ -463,16 +489,29 @@ function render() {
 
   document.getElementById('flight-count').textContent = `${flights.length} טיסות בסה"כ`;
 
+  const btnClear = document.getElementById('btn-clear');
+  const btnSendPilots = document.getElementById('btn-send-pilots');
+  if (selected.size > 0) {
+    btnClear.style.display = '';
+    btnSendPilots.style.display = '';
+    btnClear.textContent = `נקה בחירה (${selected.size})`;
+  } else {
+    btnClear.style.display = 'none';
+    btnSendPilots.style.display = 'none';
+  }
+
   if (list.length === 0) { el.innerHTML = '<p class="empty">אין טיסות בסינון זה</p>'; return; }
 
   el.innerHTML = list.map(f => {
     const s = STATUS_CFG[f.status] || STATUS_CFG.pending;
     const isPast = f.date < today;
     const optsStr = includesLabel(f);
+    const isSel = selected.has(f.id);
     return `
-    <div class="flight-card${isPast?' past':''}">
+    <div class="flight-card${isPast?' past':''}${isSel?' selected':''}">
       <div class="card-body">
-        <div class="card-content" onclick="openEdit(${f.id})">
+        <div class="checkbox${isSel?' checked':''}" onclick="toggleSel(${f.id})"></div>
+        <div class="card-content" onclick="toggleSel(${f.id})">
           <div class="card-top">
             <span class="card-date">${fmtDate(f.date)}${f.time ? ' · ' + f.time : ''}</span>
             <span class="badge" style="background:${s.bg};color:${s.text};border-color:${s.border}">${s.label}</span>
@@ -692,6 +731,27 @@ function openSend(id) {
 }
 function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
 
+// ── Send to pilots ───────────────────────────────────────────────────────────
+function buildPilotMsg() {
+  const list = flights.filter(f => selected.has(f.id)).slice().sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  return list.map(f => fillTemplate(settings.pilotMsgTemplate || '', f)).join('\n\n');
+}
+
+function openSendPilots() {
+  if (selected.size === 0) return;
+  const msg = buildPilotMsg();
+  const waHref = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  document.getElementById('send-title').textContent = `📤 שליחה לטייסים`;
+  document.getElementById('send-body').innerHTML = `
+    <div class="send-section-title">הודעה לטייסים (${selected.size} טיסות נבחרו)</div>
+    <div class="msg-preview" id="msg-preview-pilots">${msg.replace(/</g,'&lt;')}</div>
+    <div class="send-btns">
+      <button class="btn-copy" id="btn-copy-pilots" onclick="copyMsg('pilots')">📋 העתק</button>
+      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
+    </div>`;
+  document.getElementById('send-panel').classList.add('open');
+}
+
 function copyMsg(key) {
   navigator.clipboard.writeText(document.getElementById(`msg-preview-${key}`).textContent);
   const btn = document.getElementById(`btn-copy-${key}`);
@@ -706,6 +766,7 @@ function openSettings() {
   document.getElementById('settings-template-details').value = settings.msgTemplateDetails || '';
   document.getElementById('settings-template-terms').value = settings.msgTemplateTerms || '';
   document.getElementById('settings-template-location').value = settings.msgTemplateLocation || '';
+  document.getElementById('settings-template-pilots').value = settings.pilotMsgTemplate || '';
   document.getElementById('settings-modal').style.display = 'flex';
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
@@ -715,6 +776,7 @@ function saveSettings() {
   settings.msgTemplateDetails = document.getElementById('settings-template-details').value;
   settings.msgTemplateTerms = document.getElementById('settings-template-terms').value;
   settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
+  settings.pilotMsgTemplate = document.getElementById('settings-template-pilots').value;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   closeSettings();
 }
@@ -753,6 +815,9 @@ init();
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 3 — מיקום המנחת</label>
     <textarea id="settings-template-location" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🧑‍✈️ הודעה לטייסים (לכל טיסה נבחרת)</label>
+    <textarea id="settings-template-pilots" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;margin-top:4px">📅 יומן גוגל</label>
     <p id="calendar-status" style="font-size:13px;color:#6B7280;margin-bottom:8px">⚪ לא מחובר</p>
