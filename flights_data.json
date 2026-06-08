@@ -1,21 +1,6 @@
 [
   {
     "date": "2026-06-08",
-    "time": "19:00",
-    "contact": "דני דין",
-    "phone": "0548927474",
-    "duration": 40,
-    "count": 1,
-    "notes": "שולם בביט",
-    "pilots": [],
-    "photo": false,
-    "photo360": true,
-    "pilotDay": false,
-    "id": 1,
-    "calEventId": "fuqk4fb8a67ul6nu27b4s0a42g"
-  },
-  {
-    "date": "2026-06-08",
     "time": "21:00",
     "contact": "בני בן",
     "phone": "0548927474",
