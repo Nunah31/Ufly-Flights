@@ -308,7 +308,7 @@ const DEFAULT_SETTINGS = {
 `מיקום המנחת:
 {קישור_מיקום}`,
   pilotMsgTemplate:
-`היי אחי 🙂 פנוי לטיסה ב-{תאריך}, משך {משך} דקות, שעה {שעה}?`
+`היי אחי 🙂 פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
