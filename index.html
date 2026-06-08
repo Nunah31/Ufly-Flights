@@ -226,13 +226,7 @@
     <button class="send-back" onclick="closeSend()">← חזרה</button>
     <h2 style="font-size:20px;font-weight:700" id="send-title">📤 שליחה ללקוח</h2>
   </div>
-  <div class="send-body">
-    <div class="msg-preview" id="msg-preview"></div>
-    <div class="send-btns">
-      <button class="btn-copy" id="btn-copy" onclick="copyMsg()">📋 העתק</button>
-      <a class="btn-wa" id="btn-wa" href="#" target="_blank">💬 שלח בוואטסאפ</a>
-    </div>
-  </div>
+  <div class="send-body" id="send-body"></div>
 </div>
 
 <!-- Save indicator already defined above -->
@@ -262,7 +256,7 @@ const STATUS_CFG = {
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
   locationLink: 'https://waze.com/ul/hsv8ze3669',
-  msgTemplate:
+  msgTemplateDetails:
 `היי {שם} 🙂
 איזה כיף לך, נקבעה עבורך טיסת חוויה בטרקטורון מעופף:
 📅 בתאריך: {תאריך}
@@ -270,14 +264,14 @@ const DEFAULT_SETTINGS = {
 ⏱️ משך הטיסה: {משך} דקות
 ✅ הטיסה כוללת: {כולל}
 
-מצרף קישור לתקנון טיסה בטרקטורון מעופף.
+מצפים לראותך! 🛩️`,
+  msgTemplateTerms:
+`מצרף קישור לתקנון טיסה בטרקטורון מעופף.
 בבקשה להקדיש כמה רגעים לקרוא, למלא ולאשר את התקנון🙏
-{קישור_תנאים}
-
-מיקום המנחת:
-{קישור_מיקום}
-
-מצפים לראותך! 🛩️`
+{קישור_תנאים}`,
+  msgTemplateLocation:
+`מיקום המנחת:
+{קישור_מיקום}`
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
@@ -601,9 +595,9 @@ function deleteFlight() {
 // ── Send to client ───────────────────────────────────────────────────────────
 let sendFlightId = null;
 
-function buildMsg(f) {
+function fillTemplate(template, f) {
   const [y,m,day] = f.date.split('-');
-  let msg = settings.msgTemplate;
+  let msg = template;
   msg = msg.replaceAll('{שם}', f.contact || '');
   msg = msg.replaceAll('{תאריך}', `${day}/${m}/${y}`);
   msg = msg.replaceAll('{שעה}', f.time || '');
@@ -614,22 +608,38 @@ function buildMsg(f) {
   return msg;
 }
 
+const MSG_SECTIONS = [
+  { key: 'details',  title: '1️⃣ פרטי הטיסה',        templateKey: 'msgTemplateDetails' },
+  { key: 'terms',    title: '2️⃣ אישור תנאי טיסה',   templateKey: 'msgTemplateTerms' },
+  { key: 'location', title: '3️⃣ מיקום המנחת',        templateKey: 'msgTemplateLocation' },
+];
+
 function openSend(id) {
   const f = flights.find(x => x.id === id);
   if (!f) return;
   sendFlightId = id;
-  const msg = buildMsg(f);
-  document.getElementById('msg-preview').textContent = msg;
   document.getElementById('send-title').textContent = `📤 שליחה ל${f.contact}`;
   const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
-  document.getElementById('btn-wa').href = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
+
+  document.getElementById('send-body').innerHTML = MSG_SECTIONS.map(sec => {
+    const msg = fillTemplate(settings[sec.templateKey] || '', f);
+    const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
+    return `
+    <div class="send-section-title">${sec.title}</div>
+    <div class="msg-preview" id="msg-preview-${sec.key}">${msg.replace(/</g,'&lt;')}</div>
+    <div class="send-btns">
+      <button class="btn-copy" id="btn-copy-${sec.key}" onclick="copyMsg('${sec.key}')">📋 העתק</button>
+      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
+    </div>`;
+  }).join('');
+
   document.getElementById('send-panel').classList.add('open');
 }
 function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
 
-function copyMsg() {
-  navigator.clipboard.writeText(document.getElementById('msg-preview').textContent);
-  const btn = document.getElementById('btn-copy');
+function copyMsg(key) {
+  navigator.clipboard.writeText(document.getElementById(`msg-preview-${key}`).textContent);
+  const btn = document.getElementById(`btn-copy-${key}`);
   btn.textContent = '✅ הועתק!'; btn.classList.add('copied');
   setTimeout(() => { btn.textContent = '📋 העתק'; btn.classList.remove('copied'); }, 2000);
 }
@@ -638,14 +648,18 @@ function copyMsg() {
 function openSettings() {
   document.getElementById('settings-terms').value = settings.termsLink || '';
   document.getElementById('settings-location').value = settings.locationLink || '';
-  document.getElementById('settings-template').value = settings.msgTemplate || '';
+  document.getElementById('settings-template-details').value = settings.msgTemplateDetails || '';
+  document.getElementById('settings-template-terms').value = settings.msgTemplateTerms || '';
+  document.getElementById('settings-template-location').value = settings.msgTemplateLocation || '';
   document.getElementById('settings-modal').style.display = 'flex';
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
 function saveSettings() {
   settings.termsLink = document.getElementById('settings-terms').value.trim();
   settings.locationLink = document.getElementById('settings-location').value.trim();
-  settings.msgTemplate = document.getElementById('settings-template').value;
+  settings.msgTemplateDetails = document.getElementById('settings-template-details').value;
+  settings.msgTemplateTerms = document.getElementById('settings-template-terms').value;
+  settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   closeSettings();
 }
@@ -674,9 +688,16 @@ init();
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">📍 קישור למיקום המנחת</label>
     <input id="settings-location" type="text" placeholder="https://maps.google.com/..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
 
-    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 נוסח הודעת הוואטסאפ</label>
-    <p style="font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.5">ניתן להשתמש בתגיות: {שם} {תאריך} {שעה} {משך} {כולל} {קישור_תנאים} {קישור_מיקום}</p>
-    <textarea id="settings-template" rows="10" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.5">ניתן להשתמש בתגיות: {שם} {תאריך} {שעה} {משך} {כולל} {קישור_תנאים} {קישור_מיקום}</p>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 1 — פרטי הטיסה</label>
+    <textarea id="settings-template-details" rows="7" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 2 — אישור תנאי טיסה</label>
+    <textarea id="settings-template-terms" rows="4" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 3 — מיקום המנחת</label>
+    <textarea id="settings-template-location" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;margin-top:4px">📅 יומן גוגל</label>
     <p id="calendar-status" style="font-size:13px;color:#6B7280;margin-bottom:8px">⚪ לא מחובר</p>
