@@ -10,7 +10,7 @@
     "pilots": [],
     "photo": false,
     "photo360": true,
-    "pilotDay": true,
+    "pilotDay": false,
     "id": 1,
     "calEventId": null
   }
