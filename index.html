@@ -261,6 +261,8 @@ let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
 const GITHUB_REPO = 'Nunah31/Ufly-Flights';
 const DATA_FILE = 'flights_data.json';
 let fileSha = null;
+const SETTINGS_FILE = 'settings_data.json';
+let settingsSha = null;
 
 const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.googleusercontent.com';
 const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
@@ -277,19 +279,18 @@ const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
-  locationLink: 'https://waze.com/ul/hsv8ze3669',
+  locationLink: 'https://waze.com/ul/hsv8ze36k5',
   msgTemplateDetails:
 `היי {שם} :)
 איזה כיף לך, נקבעה עבורך טיסת חוויה בטרקטורון מעופף:
 📅 בתאריך: {תאריך}
-🕐 שעה: {שעה}
-⏰ משך הטיסה: {משך} דקות
+⏰ שעה: {שעה}
+⏳ משך הטיסה: {משך} דקות
 ✅ הטיסה כוללת: {כולל}
 
-מצפים לראותך! ✈️`,
+כיף שבחרת לרחף איתנו, צוות יופליי-UFly`,
   msgTemplateTerms:
-`מצרף קישור לתקנון טיסה בטרקטורון מעופף.
-בבקשה להקדיש כמה רגעים לקרוא, למלא ולאשר את התקנון 🙏
+`בבקשה להקדיש כמה רגעים לקרוא, למלא ולאשר את התקנון 🙏
 {קישור_תנאים}`,
   msgTemplateLocation:
 `מיקום המנחת:
@@ -348,6 +349,39 @@ async function saveToGithub() {
     fileSha = d.content?.sha;
     hideSaving();
   } catch(e) { hideSaving(); }
+}
+
+async function loadSettingsFromGithub() {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${SETTINGS_FILE}`,
+      { headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json' } });
+    if (r.status === 404) return false;
+    const d = await r.json();
+    settingsSha = d.sha;
+    const binary = atob(d.content.replace(/\n/g,''));
+    const bytes = new Uint8Array(binary.length);
+    for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const remote = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    settings = { ...DEFAULT_SETTINGS, ...remote };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return true;
+  } catch(e) { return false; }
+}
+
+async function saveSettingsToGithub() {
+  if (!GITHUB_TOKEN) return;
+  const jsonStr = JSON.stringify(settings, null, 2);
+  const bytes = new TextEncoder().encode(jsonStr);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  const content = btoa(binary);
+  const body = { message: 'עדכון הגדרות', content, ...(settingsSha ? { sha: settingsSha } : {}) };
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${SETTINGS_FILE}`,
+      { method: 'PUT', headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    settingsSha = d.content?.sha;
+  } catch(e) {}
 }
 
 function loadFlights() {
@@ -915,6 +949,7 @@ function saveSettings() {
   });
   settings.pilotPhones = phones;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  saveSettingsToGithub();
   closeSettings();
 }
 
@@ -926,6 +961,8 @@ async function init() {
       loadFlights();
       await saveToGithub();
     }
+    const settingsLoaded = await loadSettingsFromGithub();
+    if (!settingsLoaded) await saveSettingsToGithub();
   } else {
     loadFlights();
   }
