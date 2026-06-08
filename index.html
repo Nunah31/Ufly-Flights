@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0EA5E9">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="טיסות UFly">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול טיסות חוויה - UFly</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif; background: #F0F4FF; min-height: 100vh; direction: rtl; font-size: 16px; }
+
+  .header { background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 100%); padding: 18px 16px 14px; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .header-inner { max-width: 640px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 24px; font-weight: 700; }
+  .header p { font-size: 15px; opacity: 0.75; margin-top: 2px; }
+  .btn-export { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.5); border-radius: 10px; padding: 10px 16px; font-weight: 600; font-size: 15px; cursor: pointer; font-family: inherit; }
+  .btn-export:hover { background: rgba(255,255,255,0.3); }
+  .btn-add { background: white; color: #0C4A6E; border: none; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+
+  .main { max-width: 640px; margin: 0 auto; padding: 14px 12px 80px; }
+
+  .filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .filter-btn { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; transition: all 0.15s; }
+  .filter-btn.active { background: #0EA5E9; color: white; font-weight: 600; }
+
+  .flights-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .flight-card { background: white; border-radius: 12px; border: 2px solid transparent; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.12s; }
+  .flight-card.past { opacity: 0.65; }
+  .card-body { padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
+
+  .card-content { flex: 1; cursor: pointer; min-width: 0; }
+  .card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .card-date { font-weight: 700; font-size: 18px; color: #0C4A6E; }
+  .badge { font-size: 13px; padding: 3px 9px; border-radius: 10px; font-weight: 500; border: 1px solid; }
+  .dur-badge { font-size: 13px; padding: 3px 8px; border-radius: 10px; background: #F0F9FF; color: #0369A1; }
+  .card-contact { font-size: 16px; color: #111827; }
+  .card-contact span { color: #64748B; font-size: 15px; }
+  .card-options { font-size: 14px; color: #7C3AED; margin-top: 2px; }
+  .card-notes { font-size: 13px; color: #9CA3AF; margin-top: 3px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .card-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
+  .icon-btn { background: #F0F9FF; border: none; border-radius: 7px; padding: 6px 10px; cursor: pointer; font-size: 16px; line-height: 1; text-decoration: none; display: block; text-align: center; }
+  .icon-btn:hover { background: #E0F2FE; }
+
+  .save-indicator { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0C4A6E; color: white; padding: 10px 20px; border-radius: 20px; font-size: 15px; font-family: inherit; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .save-indicator.visible { opacity: 1; }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 20px 20px 0 0; padding: 20px 16px 32px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-title { font-size: 20px; font-weight: 700; color: #0C4A6E; }
+  .modal-close { background: #F1F5F9; border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-full { grid-column: 1 / -1; }
+  .field label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid #D1D5DB; font-size: 16px; font-family: inherit; background: white; color: #111827; outline: none; direction: rtl; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .field textarea { resize: vertical; line-height: 1.5; }
+
+  .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .toggle-opt { flex: 1; min-width: 60px; padding: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; font-weight: 500; }
+  .toggle-opt.active { background: #0EA5E9; color: white; font-weight: 700; }
+
+  .opt-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .opt-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; border: 1px solid #E2E8F0; background: #F8FAFC; cursor: pointer; transition: all 0.12s; user-select: none; }
+  .opt-item:hover { background: #F0F9FF; border-color: #BAE6FD; }
+  .opt-item.selected { background: #F0F9FF; border-color: #0EA5E9; }
+  .opt-check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #CBD5E1; background: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.12s; }
+  .opt-item.selected .opt-check { background: #0EA5E9; border-color: #0EA5E9; color: white; }
+  .opt-name { font-size: 15px; color: #1E293B; flex: 1; }
+
+  .form-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-save { flex: 1; padding: 13px; border-radius: 10px; border: none; cursor: pointer; background: #0EA5E9; color: white; font-weight: 700; font-size: 17px; font-family: inherit; }
+  .btn-save:disabled { background: #CBD5E1; cursor: not-allowed; }
+  .btn-delete { padding: 13px 16px; border-radius: 10px; border: none; cursor: pointer; background: #FEE2E2; color: #DC2626; font-weight: 700; font-size: 16px; font-family: inherit; }
+
+  .send-panel { display: none; position: fixed; inset: 0; background: white; z-index: 300; overflow-y: auto; }
+  .send-panel.open { display: block; }
+  .send-header { background: linear-gradient(135deg, #0C4A6E, #0EA5E9); padding: 16px; color: white; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; }
+  .send-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 16px; font-family: inherit; }
+  .send-body { max-width: 600px; margin: 0 auto; padding: 16px; }
+  .msg-preview { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px; font-size: 16px; line-height: 1.9; color: #1E293B; white-space: pre-wrap; direction: rtl; text-align: right; margin-bottom: 14px; font-family: inherit; }
+  .send-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-copy { padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer; background: #0EA5E9; color: white; font-weight: 700; font-size: 16px; font-family: inherit; }
+  .btn-copy.copied { background: #16A34A; }
+  .btn-wa { padding: 11px 22px; border-radius: 10px; text-decoration: none; background: #25D366; color: white; font-weight: 700; font-size: 16px; font-family: inherit; display: inline-block; }
+  .send-section-title { font-size: 15px; font-weight: 700; color: #0C4A6E; margin: 18px 0 8px; }
+
+  .empty { text-align: center; color: #9CA3AF; padding: 40px 20px; font-size: 17px; }
+  .footer-hint { text-align: center; color: #CBD5E1; font-size: 14px; margin-top: 16px; }
+
+  @media (max-width: 640px) {
+    body { font-size: 18px; }
+    .header h1 { font-size: 28px; }
+    .header p { font-size: 17px; }
+    .btn-export, .btn-add { font-size: 17px; padding: 12px 18px; }
+    .filter-btn { font-size: 17px; padding: 9px 16px; }
+    .card-date { font-size: 22px; }
+    .badge { font-size: 15px; padding: 4px 11px; }
+    .dur-badge { font-size: 15px; padding: 4px 9px; }
+    .card-contact { font-size: 19px; }
+    .card-contact span { font-size: 17px; }
+    .card-options { font-size: 16px; }
+    .card-notes { font-size: 15px; }
+    .icon-btn { font-size: 20px; padding: 8px 13px; }
+    .modal-title { font-size: 22px; }
+    .field label { font-size: 16px; }
+    .field input, .field select, .field textarea { font-size: 18px; padding: 11px 12px; }
+    .toggle-opt { font-size: 17px; padding: 11px 0; }
+    .opt-name { font-size: 17px; }
+    .opt-item { padding: 11px 12px; }
+    .btn-save { font-size: 19px; padding: 15px; }
+    .btn-delete { font-size: 18px; padding: 15px 18px; }
+    .send-back { font-size: 18px; padding: 9px 16px; }
+    .msg-preview { font-size: 18px; line-height: 2; }
+    .btn-copy, .btn-wa { font-size: 18px; padding: 13px 24px; }
+    .empty { font-size: 19px; }
+    .footer-hint { font-size: 16px; }
+    .save-indicator { font-size: 17px; padding: 12px 22px; }
+    .modal-close { width: 38px; height: 38px; font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>✈️ טיסות חוויה</h1>
+      <p id="flight-count"></p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
+      <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Filters -->
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
+    <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
+    <button class="filter-btn" data-filter="confirmed" onclick="setFilter(this,'confirmed')">מאושרות</button>
+    <button class="filter-btn" data-filter="pending" onclick="setFilter(this,'pending')">ממתינות</button>
+    <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
+  </div>
+
+  <!-- List -->
+  <div class="flights-list" id="flights-list"></div>
+  <p class="footer-hint">✏️ ערוך · 📅 הוסף ליומן גוגל · 📤 שלח ללקוח</p>
+</div>
+
+<!-- Save indicator -->
+<div class="save-indicator" id="save-indicator">💾 נשמר...</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">➕ טיסה חדשה</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>תאריך הטיסה *</label><input type="date" id="f-date"></div>
+      <div class="field"><label>שעת הטיסה *</label><input type="time" id="f-time"></div>
+      <div class="field form-full"><label>שם איש קשר *</label><input type="text" id="f-contact" placeholder="שם הלקוח"></div>
+      <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr"></div>
+
+      <div class="field form-full"><label>זמן טיסה (דקות)</label>
+        <div class="toggle-row" id="duration-row">
+          <button class="toggle-opt" data-d="20" onclick="setDuration(20)">20</button>
+          <button class="toggle-opt" data-d="30" onclick="setDuration(30)">30</button>
+          <button class="toggle-opt" data-d="40" onclick="setDuration(40)">40</button>
+          <button class="toggle-opt" data-d="60" onclick="setDuration(60)">60</button>
+        </div>
+      </div>
+
+      <div class="field form-full"><label>מספר טיסות</label>
+        <div class="toggle-row" id="count-row">
+          <button class="toggle-opt" data-c="1" onclick="setCount(1)">1</button>
+          <button class="toggle-opt" data-c="2" onclick="setCount(2)">2</button>
+          <button class="toggle-opt" data-c="3" onclick="setCount(3)">3</button>
+          <button class="toggle-opt" data-c="4" onclick="setCount(4)">4</button>
+          <button class="toggle-opt" data-c="5" onclick="setCount(5)">5</button>
+        </div>
+      </div>
+
+      <div class="field form-full">
+        <label>הטיסה כוללת</label>
+        <div class="opt-list" id="options-list"></div>
+      </div>
+
+      <div class="field"><label>סטטוס</label>
+        <select id="f-status">
+          <option value="pending">ממתין לאישור ⏳</option>
+          <option value="confirmed">מאושר 👍</option>
+          <option value="done">בוצע ✅</option>
+          <option value="cancelled">בוטל ❌</option>
+        </select>
+      </div>
+
+      <div class="field form-full"><label>הערות (אפשר לציין כאן טייסים)</label><textarea id="f-notes" rows="3" placeholder="לדוגמה: טייס - דני..."></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-save" id="btn-save" onclick="saveForm()">➕ הוסף טיסה</button>
+      <button class="btn-delete" id="btn-delete" style="display:none" onclick="deleteFlight()">🗑️</button>
+    </div>
+  </div>
+</div>
+
+<!-- Send Panel -->
+<div class="send-panel" id="send-panel">
+  <div class="send-header">
+    <button class="send-back" onclick="closeSend()">← חזרה</button>
+    <h2 style="font-size:20px;font-weight:700" id="send-title">📤 שליחה ללקוח</h2>
+  </div>
+  <div class="send-body">
+    <div class="msg-preview" id="msg-preview"></div>
+    <div class="send-btns">
+      <button class="btn-copy" id="btn-copy" onclick="copyMsg()">📋 העתק</button>
+      <a class="btn-wa" id="btn-wa" href="#" target="_blank">💬 שלח בוואטסאפ</a>
+    </div>
+  </div>
+</div>
+
+<!-- Save indicator already defined above -->
+
+<script>
+const STORAGE_KEY = 'ufly_flights_data';
+const SETTINGS_KEY = 'ufly_flights_settings';
+
+const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.googleusercontent.com';
+const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
+let gAccessToken = null;
+let tokenClient  = null;
+
+const OPTIONS_CFG = [
+  { key: 'photo',    label: '📷 צילום' },
+  { key: 'photo360', label: '🎥 צילום 360' },
+  { key: 'pilotDay', label: '🧑‍✈️ טייס ליום אחד' },
+];
+
+const STATUS_CFG = {
+  confirmed: { label:'מאושר 👍',       bg:'#DBEAFE', text:'#1E40AF', border:'#93C5FD' },
+  pending:   { label:'ממתין לאישור ⏳', bg:'#FEF9C3', text:'#854D0E', border:'#FDE047' },
+  done:      { label:'בוצע ✅',         bg:'#DCFCE7', text:'#166534', border:'#86EFAC' },
+  cancelled: { label:'בוטל ❌',         bg:'#F1F5F9', text:'#475569', border:'#CBD5E1' },
+};
+
+const DEFAULT_SETTINGS = {
+  termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
+  locationLink: 'https://waze.com/ul/hsv8ze3669',
+  msgTemplate:
+`היי {שם} 🙂
+איזה כיף לך, נקבעה עבורך טיסת חוויה בטרקטורון מעופף:
+📅 בתאריך: {תאריך}
+🕒 שעה: {שעה}
+⏱️ משך הטיסה: {משך} דקות
+✅ הטיסה כוללת: {כולל}
+
+מצרף קישור לתקנון טיסה בטרקטורון מעופף.
+בבקשה להקדיש כמה רגעים לקרוא, למלא ולאשר את התקנון🙏
+{קישור_תנאים}
+
+מיקום המנחת:
+{קישור_מיקום}
+
+מצפים לראותך! 🛩️`
+};
+
+let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
+
+let flights = [];
+let currentFilter = 'future';
+let editId = null;
+let formDuration = 20;
+let formCount = 1;
+let selectedOptions = new Set();
+
+// ── Storage ──────────────────────────────────────────────────────────────────
+function loadFlights() {
+  try { flights = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch(e) { flights = []; }
+}
+function saveFlights() {
+  showSaving();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(flights));
+  hideSaving();
+}
+function showSaving() { const el = document.getElementById('save-indicator'); el.textContent = '💾 שומר...'; el.classList.add('visible'); }
+function hideSaving() { const el = document.getElementById('save-indicator'); el.textContent = '✅ נשמר!'; setTimeout(() => el.classList.remove('visible'), 1200); }
+
+// ── Google Calendar ──────────────────────────────────────────────────────────
+function initGoogleAuth() {
+  if (!window.google) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: CALENDAR_SCOPE,
+    prompt: 'select_account',
+    callback: (resp) => {
+      if (resp.access_token) {
+        gAccessToken = resp.access_token;
+        updateCalendarStatus();
+        render();
+      }
+    }
+  });
+}
+function connectGoogle() {
+  if (!tokenClient) initGoogleAuth();
+  if (tokenClient) tokenClient.requestAccessToken();
+}
+function updateCalendarStatus() {
+  const el = document.getElementById('calendar-status');
+  if (el) el.textContent = gAccessToken ? '✅ מחובר ליומן גוגל' : '⚪ לא מחובר';
+  const btn = document.getElementById('btn-connect-cal');
+  if (btn) btn.textContent = gAccessToken ? '✅ מחובר' : '🔗 התחבר ליומן גוגל';
+}
+
+function includesLabel(f) {
+  return OPTIONS_CFG.filter(o => f[o.key]).map(o => o.label).join(', ') || 'ללא תוספות';
+}
+
+function eventSummary(f) {
+  const countPrefix = (f.count > 1) ? `${f.count} טיסות · ` : '';
+  return `${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
+}
+
+function buildCalEvent(f) {
+  const [y,m,day] = f.date.split('-');
+  const pad = x => String(x).padStart(2,'0');
+  const [hh,mm] = f.time.split(':');
+  const totalMins = parseInt(hh)*60 + parseInt(mm) + f.duration;
+  const startDT = `${y}-${pad(m)}-${pad(day)}T${hh}:${mm}:00`;
+  const endDT   = `${y}-${pad(m)}-${pad(day)}T${pad(Math.floor(totalMins/60)%24)}:${pad(totalMins%60)}:00`;
+
+  const summary = eventSummary(f);
+  let descParts = [];
+  descParts.push(`איש קשר: ${f.contact}${f.phone ? ' | ' + f.phone : ''}`);
+  descParts.push(`טיסה · משך ${f.duration} דקות`);
+  descParts.push(`כולל: ${includesLabel(f)}`);
+  if (f.notes) descParts.push(`הערות: ${f.notes}`);
+
+  return {
+    summary,
+    description: descParts.join('\n'),
+    start: { dateTime: startDT, timeZone: 'Asia/Jerusalem' },
+    end:   { dateTime: endDT,   timeZone: 'Asia/Jerusalem' }
+  };
+}
+
+async function syncCalendarEvent(f) {
+  if (!gAccessToken || !f.date || !f.time) return null;
+  const event = buildCalEvent(f);
+  const idx = flights.findIndex(x => x.id === f.id);
+
+  if (f.calEventId) {
+    try {
+      const r = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events/${f.calEventId}`,
+        { method: 'PUT', headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
+      );
+      if (r.ok) { const d = await r.json(); return d.id; }
+      if (r.status !== 404 && r.status !== 410) return null;
+      if (idx >= 0) flights[idx].calEventId = null;
+    } catch(e) { return null; }
+  }
+
+  try {
+    const r = await fetch(
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+      { method: 'POST', headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
+    );
+    const d = await r.json();
+    if (d.id && idx >= 0) {
+      flights[idx].calEventId = d.id;
+      saveFlights();
+      return d.id;
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function handleCalClick(id) {
+  const f = flights.find(x => x.id === id);
+  if (!f) return;
+  if (!f.time) { alert('יש להזין שעת טיסה לפני הוספה ליומן'); return; }
+  if (gAccessToken) {
+    const indicator = document.getElementById('save-indicator');
+    indicator.textContent = '📅 מסנכרן ליומן...';
+    indicator.classList.add('visible');
+    await syncCalendarEvent(f);
+    indicator.textContent = f.calEventId ? '📅 יומן עודכן!' : '📅 נוסף ליומן!';
+    setTimeout(() => indicator.classList.remove('visible'), 2000);
+    render();
+  } else {
+    window.open(buildCalUrl(f), '_blank');
+  }
+}
+
+function buildCalUrl(f) {
+  const [y,m,day] = f.date.split('-');
+  const pad = x => String(x).padStart(2,'0');
+  const [hh,mm] = f.time.split(':');
+  const totalMins = parseInt(hh)*60 + parseInt(mm) + f.duration;
+  const start = `${y}${pad(m)}${pad(day)}T${pad(hh)}${mm}00`;
+  const end   = `${y}${pad(m)}${pad(day)}T${pad(Math.floor(totalMins/60)%24)}${pad(totalMins%60)}00`;
+
+  const title = encodeURIComponent(eventSummary(f));
+  let descParts = [];
+  descParts.push(`איש קשר: ${f.contact}${f.phone ? ' | ' + f.phone : ''}`);
+  descParts.push(`טיסה · משך ${f.duration} דקות`);
+  descParts.push(`כולל: ${includesLabel(f)}`);
+  if (f.notes) descParts.push(`הערות: ${f.notes}`);
+  const det = encodeURIComponent(descParts.join('\n'));
+
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${det}`;
+}
+
+// ── Rendering ───────────────────────────────────────────────────────────────
+function fmtDate(d) { if(!d) return ''; const [y,m,day]=d.split('-'); return `${day}/${m}/${y.slice(2)}`; }
+
+function getFiltered() {
+  const today = new Date().toISOString().slice(0,10);
+  let list = [...flights].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  if (currentFilter==='future')    return list.filter(f => f.date >= today);
+  if (currentFilter==='past')      return list.filter(f => f.date < today);
+  if (currentFilter==='confirmed') return list.filter(f => f.status === 'confirmed');
+  if (currentFilter==='pending')   return list.filter(f => f.status === 'pending');
+  return list;
+}
+
+function render() {
+  const today = new Date().toISOString().slice(0,10);
+  const list = getFiltered();
+  const el = document.getElementById('flights-list');
+
+  document.getElementById('flight-count').textContent = `${flights.length} טיסות בסה"כ`;
+
+  if (list.length === 0) { el.innerHTML = '<p class="empty">אין טיסות בסינון זה</p>'; return; }
+
+  el.innerHTML = list.map(f => {
+    const s = STATUS_CFG[f.status] || STATUS_CFG.pending;
+    const isPast = f.date < today;
+    const optsStr = includesLabel(f);
+    return `
+    <div class="flight-card${isPast?' past':''}">
+      <div class="card-body">
+        <div class="card-content" onclick="openEdit(${f.id})">
+          <div class="card-top">
+            <span class="card-date">${fmtDate(f.date)}${f.time ? ' · ' + f.time : ''}</span>
+            <span class="badge" style="background:${s.bg};color:${s.text};border-color:${s.border}">${s.label}</span>
+            <span class="dur-badge">⏱️ ${f.duration} דק׳</span>
+            ${f.count > 1 ? `<span class="dur-badge">🔁 ${f.count} טיסות</span>` : ''}
+          </div>
+          <div class="card-contact">📞 <strong>${f.contact}</strong> <span>${f.phone || ''}</span></div>
+          <div class="card-options">✅ ${optsStr}</div>
+          ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
+        </div>
+        <div class="card-actions">
+          <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
+          <button class="icon-btn" onclick="handleCalClick(${f.id})" title="${f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calEventId?'📅✅':'📅'}</button>
+          <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Options helpers ──────────────────────────────────────────────────────────
+function renderOptionsList() {
+  const container = document.getElementById('options-list');
+  container.innerHTML = OPTIONS_CFG.map(o => {
+    const isSel = selectedOptions.has(o.key);
+    return `<div class="opt-item${isSel?' selected':''}" onclick="toggleOption('${o.key}')">
+      <div class="opt-check">${isSel?'✓':''}</div>
+      <span class="opt-name">${o.label}</span>
+    </div>`;
+  }).join('');
+}
+function toggleOption(key) {
+  selectedOptions.has(key) ? selectedOptions.delete(key) : selectedOptions.add(key);
+  renderOptionsList();
+}
+
+function setDuration(d) {
+  formDuration = d;
+  document.querySelectorAll('#duration-row .toggle-opt').forEach(b => b.classList.toggle('active', parseInt(b.dataset.d) === d));
+}
+
+function setCount(c) {
+  formCount = c;
+  document.querySelectorAll('#count-row .toggle-opt').forEach(b => b.classList.toggle('active', parseInt(b.dataset.c) === c));
+}
+
+// ── Filters ──────────────────────────────────────────────────────────────────
+function setFilter(btn, f) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = f;
+  render();
+}
+
+// ── Add / Edit ───────────────────────────────────────────────────────────────
+function openAdd() {
+  editId = null;
+  document.getElementById('modal-title').textContent = '➕ טיסה חדשה';
+  document.getElementById('btn-save').textContent = '➕ הוסף טיסה';
+  document.getElementById('btn-delete').style.display = 'none';
+  ['f-date','f-time','f-contact','f-phone','f-notes'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'pending';
+  setDuration(20);
+  setCount(1);
+  selectedOptions = new Set();
+  renderOptionsList();
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const f = flights.find(x => x.id === id);
+  if (!f) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = '✏️ עריכת טיסה';
+  document.getElementById('btn-save').textContent = '💾 שמור שינויים';
+  document.getElementById('btn-delete').style.display = '';
+  document.getElementById('f-date').value = f.date;
+  document.getElementById('f-time').value = f.time || '';
+  document.getElementById('f-contact').value = f.contact || '';
+  document.getElementById('f-phone').value = f.phone || '';
+  document.getElementById('f-status').value = f.status || 'pending';
+  document.getElementById('f-notes').value = f.notes || '';
+  setDuration(f.duration || 20);
+  setCount(f.count || 1);
+  selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
+  renderOptionsList();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function saveForm() {
+  const date = document.getElementById('f-date').value;
+  const time = document.getElementById('f-time').value;
+  const contact = document.getElementById('f-contact').value.trim();
+  const phone = document.getElementById('f-phone').value.trim();
+  if (!date || !time || !contact || !phone) { alert('נא למלא תאריך, שעה, שם איש קשר וטלפון'); return; }
+
+  const data = {
+    date, time, contact, phone,
+    duration: formDuration,
+    count: formCount,
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    photo: selectedOptions.has('photo'),
+    photo360: selectedOptions.has('photo360'),
+    pilotDay: selectedOptions.has('pilotDay'),
+  };
+
+  let savedId;
+  if (editId) {
+    const idx = flights.findIndex(x => x.id === editId);
+    if (idx >= 0) {
+      const calEventId = flights[idx].calEventId || null;
+      flights[idx] = { ...data, id: editId, calEventId };
+    }
+    savedId = editId;
+  } else {
+    const newId = flights.length > 0 ? Math.max(...flights.map(x => x.id)) + 1 : 1;
+    flights.push({ ...data, id: newId, calEventId: null });
+    savedId = newId;
+  }
+  closeModal();
+  render();
+  saveFlights();
+  if (gAccessToken) {
+    const f = flights.find(x => x.id === savedId);
+    if (f && f.calEventId) { await syncCalendarEvent(f); render(); }
+  }
+}
+
+function deleteFlight() {
+  if (!confirm('למחוק את הטיסה?')) return;
+  flights = flights.filter(x => x.id !== editId);
+  closeModal();
+  render();
+  saveFlights();
+}
+
+// ── Send to client ───────────────────────────────────────────────────────────
+let sendFlightId = null;
+
+function buildMsg(f) {
+  const [y,m,day] = f.date.split('-');
+  let msg = settings.msgTemplate;
+  msg = msg.replaceAll('{שם}', f.contact || '');
+  msg = msg.replaceAll('{תאריך}', `${day}/${m}/${y}`);
+  msg = msg.replaceAll('{שעה}', f.time || '');
+  msg = msg.replaceAll('{משך}', String(f.duration));
+  msg = msg.replaceAll('{כולל}', includesLabel(f));
+  msg = msg.replaceAll('{קישור_תנאים}', settings.termsLink || '');
+  msg = msg.replaceAll('{קישור_מיקום}', settings.locationLink || '');
+  return msg;
+}
+
+function openSend(id) {
+  const f = flights.find(x => x.id === id);
+  if (!f) return;
+  sendFlightId = id;
+  const msg = buildMsg(f);
+  document.getElementById('msg-preview').textContent = msg;
+  document.getElementById('send-title').textContent = `📤 שליחה ל${f.contact}`;
+  const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
+  document.getElementById('btn-wa').href = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
+  document.getElementById('send-panel').classList.add('open');
+}
+function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
+
+function copyMsg() {
+  navigator.clipboard.writeText(document.getElementById('msg-preview').textContent);
+  const btn = document.getElementById('btn-copy');
+  btn.textContent = '✅ הועתק!'; btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '📋 העתק'; btn.classList.remove('copied'); }, 2000);
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-terms').value = settings.termsLink || '';
+  document.getElementById('settings-location').value = settings.locationLink || '';
+  document.getElementById('settings-template').value = settings.msgTemplate || '';
+  document.getElementById('settings-modal').style.display = 'flex';
+}
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function saveSettings() {
+  settings.termsLink = document.getElementById('settings-terms').value.trim();
+  settings.locationLink = document.getElementById('settings-location').value.trim();
+  settings.msgTemplate = document.getElementById('settings-template').value;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  closeSettings();
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+function init() {
+  loadFlights();
+  render();
+  if (window.google) initGoogleAuth();
+  else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
+}
+init();
+</script>
+
+<!-- Settings modal -->
+<div id="settings-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;direction:rtl">
+  <div style="background:white;border-radius:20px;padding:24px;max-width:440px;width:90%;margin:0 16px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h2 style="font-size:20px;font-weight:700;color:#0C4A6E">⚙️ הגדרות</h2>
+      <button onclick="closeSettings()" style="background:#F1F5F9;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:20px">✕</button>
+    </div>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🔗 קישור לאישור תנאי טיסה</label>
+    <input id="settings-terms" type="text" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">📍 קישור למיקום המנחת</label>
+    <input id="settings-location" type="text" placeholder="https://maps.google.com/..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 נוסח הודעת הוואטסאפ</label>
+    <p style="font-size:12px;color:#6B7280;margin-bottom:6px;line-height:1.5">ניתן להשתמש בתגיות: {שם} {תאריך} {שעה} {משך} {כולל} {קישור_תנאים} {קישור_מיקום}</p>
+    <textarea id="settings-template" rows="10" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;margin-top:4px">📅 יומן גוגל</label>
+    <p id="calendar-status" style="font-size:13px;color:#6B7280;margin-bottom:8px">⚪ לא מחובר</p>
+    <button id="btn-connect-cal" onclick="connectGoogle()" style="width:100%;padding:11px;background:#F0F9FF;color:#075985;border:1px solid #7DD3FC;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:16px">🔗 התחבר ליומן גוגל</button>
+
+    <button onclick="saveSettings()" style="width:100%;padding:13px;background:#0EA5E9;color:white;border:none;border-radius:10px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">💾 שמור</button>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
