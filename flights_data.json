@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "date": "2026-06-08",
+    "time": "17:00",
+    "contact": "אייל גולן",
+    "phone": "0548927474",
+    "duration": 60,
+    "count": 1,
+    "notes": "",
+    "pilots": [],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 1,
+    "calEventId": null
+  }
+]
