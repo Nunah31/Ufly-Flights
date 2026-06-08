@@ -79,6 +79,10 @@
   .opt-item.selected .opt-check { background: #0EA5E9; border-color: #0EA5E9; color: white; }
   .opt-name { font-size: 15px; color: #1E293B; flex: 1; }
 
+  .custom-add-row { display: flex; gap: 8px; margin-top: 6px; }
+  .custom-add-row input { flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #D1D5DB; font-size: 15px; font-family: inherit; }
+  .custom-add-row button { padding: 8px 14px; border-radius: 8px; border: none; background: #0EA5E9; color: white; font-size: 15px; font-family: inherit; cursor: pointer; font-weight: 600; }
+
   .form-actions { display: flex; gap: 10px; margin-top: 18px; }
   .btn-save { flex: 1; padding: 13px; border-radius: 10px; border: none; cursor: pointer; background: #0EA5E9; color: white; font-weight: 700; font-size: 17px; font-family: inherit; }
   .btn-save:disabled { background: #CBD5E1; cursor: not-allowed; }
@@ -119,6 +123,7 @@
     .toggle-opt { font-size: 17px; padding: 11px 0; }
     .opt-name { font-size: 17px; }
     .opt-item { padding: 11px 12px; }
+    .custom-add-row input, .custom-add-row button { font-size: 17px; padding: 10px 14px; }
     .btn-save { font-size: 19px; padding: 15px; }
     .btn-delete { font-size: 18px; padding: 15px 18px; }
     .send-back { font-size: 18px; padding: 9px 16px; }
@@ -211,7 +216,16 @@
         </select>
       </div>
 
-      <div class="field form-full"><label>הערות (אפשר לציין כאן טייסים)</label><textarea id="f-notes" rows="3" placeholder="לדוגמה: טייס - דני..."></textarea></div>
+      <div class="field form-full">
+        <label>🧑‍✈️ טייסים</label>
+        <div class="opt-list" id="pilots-list"></div>
+        <div class="custom-add-row">
+          <input type="text" id="custom-pilot-input" placeholder="הוסף טייס...">
+          <button onclick="addCustomPilot()">הוסף</button>
+        </div>
+      </div>
+
+      <div class="field form-full"><label>הערות</label><textarea id="f-notes" rows="3" placeholder="הערות חופשיות..."></textarea></div>
     </div>
     <div class="form-actions">
       <button class="btn-save" id="btn-save" onclick="saveForm()">➕ הוסף טיסה</button>
@@ -245,6 +259,8 @@ const OPTIONS_CFG = [
   { key: 'photo360', label: '🎥 צילום 360' },
   { key: 'pilotDay', label: '🧑‍✈️ טייס ליום אחד' },
 ];
+
+const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
 const STATUS_CFG = {
   confirmed: { label:'מאושר 👍',       bg:'#DBEAFE', text:'#1E40AF', border:'#93C5FD' },
@@ -282,6 +298,8 @@ let editId = null;
 let formDuration = 20;
 let formCount = 1;
 let selectedOptions = new Set();
+let selectedPilots = new Set();
+let customPilots = [];
 
 // ── Storage ──────────────────────────────────────────────────────────────────
 function loadFlights() {
@@ -345,6 +363,7 @@ function buildCalEvent(f) {
   descParts.push(`איש קשר: ${f.contact}${f.phone ? ' | ' + f.phone : ''}`);
   descParts.push(`טיסה · משך ${f.duration} דקות`);
   descParts.push(`כולל: ${includesLabel(f)}`);
+  if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
 
   return {
@@ -417,6 +436,7 @@ function buildCalUrl(f) {
   descParts.push(`איש קשר: ${f.contact}${f.phone ? ' | ' + f.phone : ''}`);
   descParts.push(`טיסה · משך ${f.duration} דקות`);
   descParts.push(`כולל: ${includesLabel(f)}`);
+  if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
   const det = encodeURIComponent(descParts.join('\n'));
 
@@ -461,6 +481,7 @@ function render() {
           </div>
           <div class="card-contact">📞 <strong>${f.contact}</strong> <span>${f.phone || ''}</span></div>
           <div class="card-options">✅ ${optsStr}</div>
+          ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
         <div class="card-actions">
@@ -487,6 +508,32 @@ function renderOptionsList() {
 function toggleOption(key) {
   selectedOptions.has(key) ? selectedOptions.delete(key) : selectedOptions.add(key);
   renderOptionsList();
+}
+
+// ── Pilots helpers ───────────────────────────────────────────────────────────
+function renderPilotsList() {
+  const container = document.getElementById('pilots-list');
+  const allPilots = [...BASE_PILOTS, ...customPilots];
+  container.innerHTML = allPilots.map(name => {
+    const isSel = selectedPilots.has(name);
+    return `<div class="opt-item${isSel?' selected':''}" onclick="togglePilot('${name.replace(/'/g,"\\'")}')">
+      <div class="opt-check">${isSel?'✓':''}</div>
+      <span class="opt-name">${name}</span>
+    </div>`;
+  }).join('');
+}
+function togglePilot(name) {
+  selectedPilots.has(name) ? selectedPilots.delete(name) : selectedPilots.add(name);
+  renderPilotsList();
+}
+function addCustomPilot() {
+  const input = document.getElementById('custom-pilot-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (!BASE_PILOTS.includes(name) && !customPilots.includes(name)) customPilots.push(name);
+  selectedPilots.add(name);
+  input.value = '';
+  renderPilotsList();
 }
 
 function setDuration(d) {
@@ -519,6 +566,9 @@ function openAdd() {
   setCount(1);
   selectedOptions = new Set();
   renderOptionsList();
+  selectedPilots = new Set();
+  customPilots = [];
+  renderPilotsList();
   document.getElementById('modal').classList.add('open');
 }
 
@@ -539,6 +589,10 @@ function openEdit(id) {
   setCount(f.count || 1);
   selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
   renderOptionsList();
+  const savedPilots = f.pilots || [];
+  selectedPilots = new Set(savedPilots);
+  customPilots = savedPilots.filter(n => !BASE_PILOTS.includes(n));
+  renderPilotsList();
   document.getElementById('modal').classList.add('open');
 }
 
@@ -557,6 +611,7 @@ async function saveForm() {
     count: formCount,
     status: document.getElementById('f-status').value,
     notes: document.getElementById('f-notes').value.trim(),
+    pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
     photo360: selectedOptions.has('photo360'),
     pilotDay: selectedOptions.has('pilotDay'),
