@@ -268,6 +268,11 @@
 const STORAGE_KEY = 'ufly_flights_data';
 const SETTINGS_KEY = 'ufly_flights_settings';
 
+let GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
+const GITHUB_REPO = 'Nunah31/Ufly-Flights';
+const DATA_FILE = 'flights_data.json';
+let fileSha = null;
+
 const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.googleusercontent.com';
 const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
 let gAccessToken = null;
@@ -328,15 +333,46 @@ function toggleSel(id) { selected.has(id) ? selected.delete(id) : selected.add(i
 function selectAll() { getFiltered().forEach(f => selected.add(f.id)); render(); }
 function clearSel() { selected.clear(); render(); }
 
-// ── Storage ──────────────────────────────────────────────────────────────────
+// ── Storage (GitHub sync) ────────────────────────────────────────────────────
+async function loadFromGithub() {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`,
+      { headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json' } });
+    if (r.status === 404) return false;
+    const d = await r.json();
+    fileSha = d.sha;
+    const binary = atob(d.content.replace(/\n/g,''));
+    const bytes = new Uint8Array(binary.length);
+    for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    flights = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    return true;
+  } catch(e) { return false; }
+}
+
+async function saveToGithub() {
+  showSaving();
+  const jsonStr = JSON.stringify(flights, null, 2);
+  const bytes = new TextEncoder().encode(jsonStr);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  const content = btoa(binary);
+  const body = { message: 'עדכון טיסות', content, ...(fileSha ? { sha: fileSha } : {}) };
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`,
+      { method: 'PUT', headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    fileSha = d.content?.sha;
+    hideSaving();
+  } catch(e) { hideSaving(); }
+}
+
 function loadFlights() {
   try { flights = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
   catch(e) { flights = []; }
 }
 function saveFlights() {
-  showSaving();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(flights));
-  hideSaving();
+  saveToGithub();
 }
 function showSaving() { const el = document.getElementById('save-indicator'); el.textContent = '💾 שומר...'; el.classList.add('visible'); }
 function hideSaving() { const el = document.getElementById('save-indicator'); el.textContent = '✅ נשמר!'; setTimeout(() => el.classList.remove('visible'), 1200); }
@@ -795,6 +831,7 @@ function copyMsg(key) {
 
 // ── Settings ─────────────────────────────────────────────────────────────────
 function openSettings() {
+  document.getElementById('settings-token').value = localStorage.getItem('gh_token') || '';
   document.getElementById('settings-terms').value = settings.termsLink || '';
   document.getElementById('settings-location').value = settings.locationLink || '';
   document.getElementById('settings-template-details').value = settings.msgTemplateDetails || '';
@@ -815,6 +852,13 @@ function renderPilotPhonesList() {
     </div>`).join('');
 }
 function saveSettings() {
+  const token = document.getElementById('settings-token').value.trim();
+  if (token && token !== GITHUB_TOKEN) {
+    localStorage.setItem('gh_token', token);
+    GITHUB_TOKEN = token;
+    fileSha = null;
+    init();
+  }
   settings.termsLink = document.getElementById('settings-terms').value.trim();
   settings.locationLink = document.getElementById('settings-location').value.trim();
   settings.msgTemplateDetails = document.getElementById('settings-template-details').value;
@@ -832,13 +876,45 @@ function saveSettings() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-function init() {
-  loadFlights();
+async function init() {
+  if (GITHUB_TOKEN) {
+    const loaded = await loadFromGithub();
+    if (!loaded) {
+      loadFlights();
+      await saveToGithub();
+    }
+  } else {
+    loadFlights();
+  }
   render();
   if (window.google) initGoogleAuth();
   else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
 }
-init();
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (!t) return;
+  localStorage.setItem('gh_token', t);
+  GITHUB_TOKEN = t;
+  document.getElementById('token-setup').style.display = 'none';
+  init();
+}
+</script>
+
+<!-- Token setup (first time) -->
+<div id="token-setup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;direction:rtl">
+  <div style="background:white;border-radius:20px;padding:24px;max-width:360px;width:90%;margin:0 16px">
+    <h2 style="font-size:20px;font-weight:700;color:#0C4A6E;margin-bottom:8px">🔑 הגדרת חיבור</h2>
+    <p style="font-size:15px;color:#64748B;margin-bottom:16px;line-height:1.6">כדי לסנכרן טיסות בין מכשירים יש להכניס את ה-GitHub Token (פעם אחת בלבד)</p>
+    <input id="token-input" type="password" placeholder="ghp_..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:16px;font-family:inherit;margin-bottom:12px;direction:ltr">
+    <button onclick="saveToken()" style="width:100%;padding:13px;background:#0EA5E9;color:white;border:none;border-radius:10px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit">שמור וחבר</button>
+  </div>
+</div>
+<script>
+if (!localStorage.getItem('gh_token')) {
+  document.getElementById('token-setup').style.display = 'flex';
+} else {
+  init();
+}
 </script>
 
 <!-- Settings modal -->
@@ -848,6 +924,9 @@ init();
       <h2 style="font-size:20px;font-weight:700;color:#0C4A6E">⚙️ הגדרות</h2>
       <button onclick="closeSettings()" style="background:#F1F5F9;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:20px">✕</button>
     </div>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🔑 GitHub Token (לסנכרון בין מכשירים)</label>
+    <input id="settings-token" type="password" placeholder="ghp_..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:16px;direction:ltr">
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🔗 קישור לאישור תנאי טיסה</label>
     <input id="settings-terms" type="text" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
