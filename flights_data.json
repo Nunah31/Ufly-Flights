@@ -20,13 +20,11 @@
     "contact": "יואל הברי",
     "phone": "0548927474",
     "duration": 40,
-    "count": 2,
+    "count": 1,
     "notes": "",
-    "pilots": [
-      "דור"
-    ],
-    "photo": true,
-    "photo360": false,
+    "pilots": [],
+    "photo": false,
+    "photo360": true,
     "pilotDay": false,
     "id": 3,
     "calEventId": "ro77omj9e9fmhou7lvcenb0g7s"
