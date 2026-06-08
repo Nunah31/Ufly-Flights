@@ -5,9 +5,11 @@
     "contact": "אייל גולן",
     "phone": "0548927474",
     "duration": 60,
-    "count": 1,
+    "count": 2,
     "notes": "",
-    "pilots": [],
+    "pilots": [
+      "אביעד"
+    ],
     "photo": false,
     "photo360": true,
     "pilotDay": true,
