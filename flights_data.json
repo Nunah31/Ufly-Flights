@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "date": "2026-06-08",
+    "time": "19:00",
+    "contact": "דני דין",
+    "phone": "0548927474",
+    "duration": 40,
+    "count": 1,
+    "notes": "",
+    "pilots": [],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 1,
+    "calEventId": null
+  }
+]
