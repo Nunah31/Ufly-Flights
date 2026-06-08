@@ -33,5 +33,20 @@
     "pilotDay": false,
     "id": 2,
     "calEventId": null
+  },
+  {
+    "date": "2026-06-19",
+    "time": "19:00",
+    "contact": "פטרובסקי ירון",
+    "phone": "0538218463",
+    "duration": 40,
+    "count": 1,
+    "notes": "",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 3,
+    "calEventId": null
   }
 ]
