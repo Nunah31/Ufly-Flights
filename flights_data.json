@@ -5,12 +5,9 @@
     "contact": "בני בן",
     "phone": "0548927474",
     "duration": 40,
-    "count": 2,
+    "count": 1,
     "notes": "שולם בביט",
-    "pilots": [
-      "אביעד",
-      "יריב"
-    ],
+    "pilots": [],
     "photo": false,
     "photo360": true,
     "pilotDay": true,
