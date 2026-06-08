@@ -13,5 +13,23 @@
     "pilotDay": false,
     "id": 1,
     "calEventId": "fuqk4fb8a67ul6nu27b4s0a42g"
+  },
+  {
+    "date": "2026-06-08",
+    "time": "21:00",
+    "contact": "בני בן",
+    "phone": "0548927474",
+    "duration": 40,
+    "count": 2,
+    "notes": "",
+    "pilots": [
+      "דור",
+      "שרון"
+    ],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": true,
+    "id": 2,
+    "calEventId": null
   }
 ]
