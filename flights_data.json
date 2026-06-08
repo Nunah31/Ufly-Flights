@@ -4,13 +4,15 @@
     "time": "18:00",
     "contact": "משה פרץ",
     "phone": "0548927474",
-    "duration": 30,
+    "duration": 40,
     "count": 1,
     "notes": "",
-    "pilots": [],
+    "pilots": [
+      "שרון"
+    ],
     "photo": false,
     "photo360": true,
-    "pilotDay": true,
+    "pilotDay": false,
     "id": 1,
     "calEventId": null
   }
