@@ -277,6 +277,8 @@ const OPTIONS_CFG = [
 
 const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
+const TEMPLATES_VERSION = 2;
+
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
   locationLink: 'https://waze.com/ul/hsv8ze36k5',
@@ -349,6 +351,21 @@ async function saveToGithub() {
     fileSha = d.content?.sha;
     hideSaving();
   } catch(e) { hideSaving(); }
+}
+
+function migrateSettings() {
+  if ((settings.templatesVersion || 0) < TEMPLATES_VERSION) {
+    settings.msgTemplateDetails  = DEFAULT_SETTINGS.msgTemplateDetails;
+    settings.msgTemplateTerms    = DEFAULT_SETTINGS.msgTemplateTerms;
+    settings.msgTemplateLocation = DEFAULT_SETTINGS.msgTemplateLocation;
+    settings.msgTemplatePostpone = DEFAULT_SETTINGS.msgTemplatePostpone;
+    settings.pilotMsgTemplate    = DEFAULT_SETTINGS.pilotMsgTemplate;
+    settings.locationLink        = DEFAULT_SETTINGS.locationLink;
+    settings.templatesVersion    = TEMPLATES_VERSION;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return true;
+  }
+  return false;
 }
 
 async function loadSettingsFromGithub() {
@@ -963,8 +980,10 @@ async function init() {
     }
     const settingsLoaded = await loadSettingsFromGithub();
     if (!settingsLoaded) await saveSettingsToGithub();
+    if (migrateSettings()) await saveSettingsToGithub();
   } else {
     loadFlights();
+    if (migrateSettings()) {} // local-only: already saved to localStorage inside migrateSettings
   }
   render();
   if (window.google) initGoogleAuth();
