@@ -1,0 +1,20 @@
+[
+  {
+    "date": "2026-06-08",
+    "time": "19:21",
+    "contact": "אודי",
+    "phone": "0522457457",
+    "duration": 40,
+    "count": 2,
+    "status": "confirmed",
+    "notes": "",
+    "pilots": [
+      "דור"
+    ],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 1,
+    "calEventId": null
+  }
+]
