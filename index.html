@@ -308,7 +308,8 @@ const DEFAULT_SETTINGS = {
 `מיקום המנחת:
 {קישור_מיקום}`,
   pilotMsgTemplate:
-`היי {שם_טייס} :) פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`
+`היי {שם_טייס} :) פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`,
+  pilotPhones: {}
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
@@ -732,42 +733,54 @@ function openSend(id) {
 function closeSend() { document.getElementById('send-panel').classList.remove('open'); sendFlightId = null; }
 
 // ── Send to pilots ───────────────────────────────────────────────────────────
-let sendPilotName = '';
+let sendPilotNames = new Set();
 
-function buildPilotMsg(pilotName) {
+function getPilotPhone(name) {
+  return (settings.pilotPhones && settings.pilotPhones[name]) || '';
+}
+
+function buildPilotMsgFor(pilotName) {
   const list = flights.filter(f => selected.has(f.id)).slice().sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
   return list.map(f => fillTemplate(settings.pilotMsgTemplate || '', f).replaceAll('{שם_טייס}', pilotName || 'טייס')).join('\n\n');
 }
 
-function renderSendPilotsBody() {
-  const allPilots = [...BASE_PILOTS, ...customPilots];
-  const msg = buildPilotMsg(sendPilotName);
-  const waHref = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  document.getElementById('send-body').innerHTML = `
-    <div class="send-section-title">בחרי טייס לפנייה</div>
-    <div class="opt-list">${allPilots.map(name => `
-      <div class="opt-item${sendPilotName===name?' selected':''}" onclick="selectSendPilot('${name.replace(/'/g,"\\'")}')">
-        <div class="opt-check">${sendPilotName===name?'✓':''}</div>
-        <span class="opt-name">${name}</span>
-      </div>`).join('')}
-    </div>
-    <div class="send-section-title">הודעה לטייסים (${selected.size} טיסות נבחרו)</div>
-    <div class="msg-preview" id="msg-preview-pilots">${msg.replace(/</g,'&lt;')}</div>
-    <div class="send-btns">
-      <button class="btn-copy" id="btn-copy-pilots" onclick="copyMsg('pilots')">📋 העתק</button>
-      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
-    </div>`;
+function toggleSendPilot(name) {
+  sendPilotNames.has(name) ? sendPilotNames.delete(name) : sendPilotNames.add(name);
+  renderSendPilotsBody();
 }
 
-function selectSendPilot(name) {
-  sendPilotName = name;
-  renderSendPilotsBody();
+function renderSendPilotsBody() {
+  const allPilots = [...BASE_PILOTS, ...customPilots];
+  document.getElementById('send-body').innerHTML = `
+    <div class="send-section-title">בחרי טייסים לשליחה (${selected.size} טיסות נבחרו)</div>
+    <div class="opt-list">${allPilots.map(name => {
+      const isSel = sendPilotNames.has(name);
+      const phone = getPilotPhone(name);
+      return `<div class="opt-item${isSel?' selected':''}" onclick="toggleSendPilot('${name.replace(/'/g,"\\'")}')">
+        <div class="opt-check">${isSel?'✓':''}</div>
+        <span class="opt-name">${name}${phone?'':' (אין טלפון שמור)'}</span>
+      </div>`;
+    }).join('')}
+    </div>
+    ${[...sendPilotNames].map(name => {
+      const msg = buildPilotMsgFor(name);
+      const phone = getPilotPhone(name);
+      const phoneDigits = phone.replace(/\D/g,'').replace(/^0/, '972');
+      const waHref = phoneDigits ? `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      const key = `pilot-${name}`;
+      return `
+      <div class="send-section-title">${name}${phone?'':' — אין טלפון שמור, ייפתח וואטסאפ כללי'}</div>
+      <div class="msg-preview" id="msg-preview-${key}">${msg.replace(/</g,'&lt;')}</div>
+      <div class="send-btns">
+        <button class="btn-copy" id="btn-copy-${key}" onclick="copyMsg('${key}')">📋 העתק</button>
+        <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
+      </div>`;
+    }).join('')}`;
 }
 
 function openSendPilots() {
   if (selected.size === 0) return;
-  const allPilots = [...BASE_PILOTS, ...customPilots];
-  if (!allPilots.includes(sendPilotName)) sendPilotName = allPilots[0] || '';
+  sendPilotNames = new Set();
   document.getElementById('send-title').textContent = `📤 שליחה לטייסים`;
   renderSendPilotsBody();
   document.getElementById('send-panel').classList.add('open');
@@ -788,9 +801,19 @@ function openSettings() {
   document.getElementById('settings-template-terms').value = settings.msgTemplateTerms || '';
   document.getElementById('settings-template-location').value = settings.msgTemplateLocation || '';
   document.getElementById('settings-template-pilots').value = settings.pilotMsgTemplate || '';
+  renderPilotPhonesList();
   document.getElementById('settings-modal').style.display = 'flex';
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function renderPilotPhonesList() {
+  const allPilots = [...BASE_PILOTS, ...customPilots];
+  const container = document.getElementById('pilot-phones-list');
+  container.innerHTML = allPilots.map(name => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="min-width:55px;font-size:14px;color:#374151">${name}</span>
+      <input type="tel" class="pilot-phone-input" data-pilot-name="${name.replace(/"/g,'&quot;')}" value="${getPilotPhone(name)}" placeholder="050-1234567" style="flex:1;padding:8px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;direction:ltr">
+    </div>`).join('');
+}
 function saveSettings() {
   settings.termsLink = document.getElementById('settings-terms').value.trim();
   settings.locationLink = document.getElementById('settings-location').value.trim();
@@ -798,6 +821,12 @@ function saveSettings() {
   settings.msgTemplateTerms = document.getElementById('settings-template-terms').value;
   settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
   settings.pilotMsgTemplate = document.getElementById('settings-template-pilots').value;
+  const phones = {};
+  document.querySelectorAll('.pilot-phone-input').forEach(inp => {
+    const val = inp.value.trim();
+    if (val) phones[inp.dataset.pilotName] = val;
+  });
+  settings.pilotPhones = phones;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   closeSettings();
 }
@@ -839,6 +868,9 @@ init();
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🧑‍✈️ הודעה לטייסים (לכל טיסה נבחרת)</label>
     <textarea id="settings-template-pilots" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">📞 טלפוני טייסים (לשליחה ישירה בוואטסאפ)</label>
+    <div id="pilot-phones-list" style="margin-bottom:16px"></div>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;margin-top:4px">📅 יומן גוגל</label>
     <p id="calendar-status" style="font-size:13px;color:#6B7280;margin-bottom:8px">⚪ לא מחובר</p>
