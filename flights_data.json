@@ -8,9 +8,9 @@
     "count": 1,
     "notes": "שולם בביט",
     "pilots": [],
-    "photo": false,
-    "photo360": true,
-    "pilotDay": true,
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
     "id": 2,
     "calEventId": "me4g6k5iaejekkdrcu2f4dc0qo"
   }
