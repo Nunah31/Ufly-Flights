@@ -277,14 +277,14 @@ const OPTIONS_CFG = [
 
 const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
-const TEMPLATES_VERSION = 5;
+const TEMPLATES_VERSION = 6;
 
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
   locationLink: 'https://waze.com/ul/hsv8ze36k5',
   msgTemplateDetails:
 `היי {שם} :)
-איזה כיף לך, נקבעה עבורך טיסת חוויה בטרקטורון מעופף:
+איזה כיף לך, {נקבעה_הטיסה} בטרקטורון מעופף:
 📅 בתאריך: {תאריך}
 ⏰ שעה: {שעה}
 ⏳ משך הטיסה: {משך} דקות
@@ -834,6 +834,10 @@ let sendFlightId = null;
 function fillTemplate(template, f) {
   const [y,m,day] = f.date.split('-');
   let msg = template;
+  const flightsPhrase = (f.count && f.count > 1)
+    ? `נקבעו עבורך ${f.count} טיסות חוויה`
+    : `נקבעה עבורך טיסת חוויה`;
+  msg = msg.replaceAll('{נקבעה_הטיסה}', flightsPhrase);
   msg = msg.replaceAll('{שם}', f.contact || '');
   msg = msg.replaceAll('{תאריך}', `${day}/${m}/${y}`);
   msg = msg.replaceAll('{שעה}', f.time || '');
