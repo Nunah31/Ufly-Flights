@@ -473,6 +473,20 @@ async function syncCalendarEvent(f) {
   return null;
 }
 
+async function deleteCalendarEvent(f) {
+  if (!f || !f.calEventId) return;
+  if (!gAccessToken && window.google) {
+    await connectGoogleAsync();
+  }
+  if (!gAccessToken) return;
+  try {
+    await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events/${f.calEventId}`,
+      { method: 'DELETE', headers: { 'Authorization': `Bearer ${gAccessToken}` } }
+    );
+  } catch(e) {}
+}
+
 async function handleCalClick(id) {
   const f = flights.find(x => x.id === id);
   if (!f) return;
@@ -721,12 +735,14 @@ async function saveForm() {
   }
 }
 
-function deleteFlight() {
+async function deleteFlight() {
   if (!confirm('למחוק את הטיסה?')) return;
+  const f = flights.find(x => x.id === editId);
   flights = flights.filter(x => x.id !== editId);
   closeModal();
   render();
   saveFlights();
+  if (f && f.calEventId) await deleteCalendarEvent(f);
 }
 
 // ── Send to client ───────────────────────────────────────────────────────────
