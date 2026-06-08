@@ -5,11 +5,13 @@
     "contact": "סלין דיון",
     "phone": "0548927474",
     "duration": 40,
-    "count": 1,
+    "count": 2,
     "notes": "",
-    "pilots": [],
-    "photo": false,
-    "photo360": true,
+    "pilots": [
+      "דור"
+    ],
+    "photo": true,
+    "photo360": false,
     "pilotDay": true,
     "id": 1,
     "calEventId": "7tph62o7rk3h6ionb2vpgiahms"
