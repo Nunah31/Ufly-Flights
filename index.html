@@ -381,6 +381,25 @@ function connectGoogle() {
   if (!tokenClient) initGoogleAuth();
   if (tokenClient) tokenClient.requestAccessToken();
 }
+function connectGoogleAsync() {
+  return new Promise((resolve) => {
+    if (!tokenClient) initGoogleAuth();
+    if (!tokenClient) { resolve(false); return; }
+    const originalCallback = tokenClient.callback;
+    tokenClient.callback = (resp) => {
+      tokenClient.callback = originalCallback;
+      if (resp.access_token) {
+        gAccessToken = resp.access_token;
+        updateCalendarStatus();
+        render();
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    };
+    tokenClient.requestAccessToken();
+  });
+}
 function updateCalendarStatus() {
   const el = document.getElementById('calendar-status');
   if (el) el.textContent = gAccessToken ? '✅ מחובר ליומן גוגל' : '⚪ לא מחובר';
@@ -457,16 +476,24 @@ async function handleCalClick(id) {
   const f = flights.find(x => x.id === id);
   if (!f) return;
   if (!f.time) { alert('יש להזין שעת טיסה לפני הוספה ליומן'); return; }
+
+  if (!gAccessToken && window.google) {
+    await connectGoogleAsync();
+  }
+
   if (gAccessToken) {
     const indicator = document.getElementById('save-indicator');
     indicator.textContent = '📅 מסנכרן ליומן...';
     indicator.classList.add('visible');
+    const hadEvent = !!f.calEventId;
     await syncCalendarEvent(f);
-    indicator.textContent = f.calEventId ? '📅 יומן עודכן!' : '📅 נוסף ליומן!';
+    indicator.textContent = hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!';
     setTimeout(() => indicator.classList.remove('visible'), 2000);
     render();
-  } else {
+  } else if (!f.calEventId) {
     window.open(buildCalUrl(f), '_blank');
+  } else {
+    alert('כדי לעדכן את האירוע הקיים ביומן יש להתחבר לחשבון Google. התחברי ליומן גוגל בהגדרות (⚙️) ונסי שוב — כך נמנע יצירת אירוע כפול.');
   }
 }
 
