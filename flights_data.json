@@ -71,13 +71,14 @@
     "phone": "+972 52-522-0979",
     "duration": 40,
     "count": 2,
-    "email": "",
+    "email": "dudusb@walla.com",
     "notes": "",
     "pilots": [],
     "photo": true,
     "photo360": true,
     "pilotDay": false,
     "id": 6,
-    "calEventId": "1e99hv3lm2njbj722f4bhbpilo"
+    "calEventId": "1e99hv3lm2njbj722f4bhbpilo",
+    "termsReceived": true
   }
 ]
