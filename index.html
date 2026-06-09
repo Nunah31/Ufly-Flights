@@ -276,6 +276,7 @@ const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.goo
 const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
 let gAccessToken = null;
 let tokenClient  = null;
+let pendingCalTermsSync = [];
 
 const OPTIONS_CFG = [
   { key: 'photo',    label: '📷 צילום' },
@@ -370,7 +371,14 @@ async function loadFromGithub() {
     const binary = atob(d.content.replace(/\n/g,''));
     const bytes = new Uint8Array(binary.length);
     for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const prevFlights = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     flights = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    // queue flights that newly got termsReceived=true for calendar sync
+    pendingCalTermsSync = flights.filter(f => {
+      if (!f.calEventId || !f.termsReceived) return false;
+      const prev = prevFlights.find(p => p.id === f.id);
+      return !prev || !prev.termsReceived;
+    }).map(f => f.id);
     return true;
   } catch(e) { return false; }
 }
@@ -463,6 +471,7 @@ function initGoogleAuth() {
         gAccessToken = resp.access_token;
         updateCalendarStatus();
         render();
+        flushPendingCalTermsSync();
       }
     }
   });
@@ -490,6 +499,19 @@ function connectGoogleAsync() {
     tokenClient.requestAccessToken();
   });
 }
+async function flushPendingCalTermsSync() {
+  if (!gAccessToken || pendingCalTermsSync.length === 0) return;
+  const ids = [...pendingCalTermsSync];
+  pendingCalTermsSync = [];
+  for (const id of ids) {
+    const f = flights.find(x => x.id === id);
+    if (f && f.calEventId) {
+      await syncCalendarEvent(f);
+    }
+  }
+  render();
+}
+
 function updateCalendarStatus() {
   const el = document.getElementById('calendar-status');
   if (el) el.textContent = gAccessToken ? '✅ מחובר ליומן גוגל' : '⚪ לא מחובר';
@@ -520,6 +542,8 @@ function buildCalEvent(f) {
   descParts.push(`טיסה · משך ${f.duration} דקות`);
   descParts.push(`כולל: ${includesLabel(f)}`);
   if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
+  if (f.email) descParts.push(`מייל: ${f.email}`);
+  if (f.termsReceived) descParts.push(`✅ תנאי טיסה אושרו`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
 
   return {
@@ -1068,6 +1092,8 @@ async function init() {
   render();
   if (window.google) initGoogleAuth();
   else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
+  // if already authenticated, sync any pending calendar updates
+  if (gAccessToken) flushPendingCalTermsSync();
 }
 function saveToken() {
   const t = document.getElementById('token-input').value.trim();
