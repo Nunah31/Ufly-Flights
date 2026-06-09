@@ -6,7 +6,7 @@
     "phone": "+972 54-329-8747",
     "duration": 40,
     "count": 4,
-    "email": "",
+    "email": "ashertvili@gmail.com",
     "notes": "",
     "pilots": [
       "דור",
@@ -18,7 +18,7 @@
     "pilotDay": true,
     "id": 1,
     "calEventId": "nd5dml4etgtfsml38tiqfesmoo",
-    "termsReceived": false
+    "termsReceived": true
   },
   {
     "date": "2026-06-18",
