@@ -82,6 +82,7 @@
 
   .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .toggle-row-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .toggle-row-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); }
   .toggle-opt { flex: 1; min-width: 60px; padding: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; font-weight: 500; }
   .toggle-opt.active { background: #0EA5E9; color: white; font-weight: 700; }
 
@@ -243,6 +244,15 @@
         </div>
       </div>
 
+      <div class="field form-full"><label>💳 שולם באמצעות</label>
+        <div class="toggle-row toggle-row-grid2" id="payment-row">
+          <button class="toggle-opt" data-p="ביט" onclick="setPayment('ביט')">ביט</button>
+          <button class="toggle-opt" data-p="פייבוקס" onclick="setPayment('פייבוקס')">פייבוקס</button>
+          <button class="toggle-opt" data-p="העברה בנקאית" onclick="setPayment('העברה בנקאית')">העברה בנקאית</button>
+          <button class="toggle-opt" data-p="מזומן" onclick="setPayment('מזומן')">מזומן</button>
+        </div>
+      </div>
+
       <div class="field form-full"><label>הערות</label><textarea id="f-notes" rows="3" placeholder="הערות חופשיות..."></textarea></div>
     </div>
     <div class="form-actions">
@@ -286,7 +296,7 @@ const OPTIONS_CFG = [
   { key: 'pilotDay', label: '🧑‍✈️ טייס ליום אחד' },
 ];
 
-const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
+const BASE_PILOTS = ['אודי', 'דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
 
 const TEMPLATES_VERSION = 7;
 
@@ -324,6 +334,7 @@ let currentFilter = 'future';
 let editId = null;
 let formDuration = 20;
 let formCount = 1;
+let formPayment = null;
 let selectedOptions = new Set();
 let selectedPilots = new Set();
 let customPilots = [];
@@ -598,6 +609,7 @@ async function syncCalendarEvent(f) {
         { method: 'PUT', headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
       );
       if (r.ok) { const d = await r.json(); return d.id; }
+      if (r.status === 401) { gAccessToken = null; updateCalendarStatus(); return 'auth_expired'; }
       if (r.status !== 404 && r.status !== 410) return null;
       if (idx >= 0) flights[idx].calEventId = null;
     } catch(e) { return null; }
@@ -646,9 +658,15 @@ async function handleCalClick(id) {
     indicator.textContent = '📅 מסנכרן ליומן...';
     indicator.classList.add('visible');
     const hadEvent = !!f.calEventId;
-    await syncCalendarEvent(f);
-    indicator.textContent = hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!';
-    setTimeout(() => indicator.classList.remove('visible'), 2000);
+    let result = await syncCalendarEvent(f);
+    if (result === 'auth_expired') {
+      // token expired — reconnect and retry automatically
+      indicator.textContent = '🔄 מתחברת מחדש לגוגל...';
+      await connectGoogleAsync();
+      if (gAccessToken) result = await syncCalendarEvent(f);
+    }
+    indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה בסנכרון יומן';
+    setTimeout(() => indicator.classList.remove('visible'), 2500);
     render();
   } else if (!f.calEventId) {
     window.open(buildCalUrl(f), '_blank');
@@ -727,6 +745,7 @@ function render() {
           <div class="card-options">✅ ${optsStr}</div>
           ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
           ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
+          ${f.paymentMethod ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethod}</div>` : ''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
         <div class="card-actions">
@@ -808,6 +827,16 @@ function onCountOtherInput(v) {
   formCount = Math.max(1, parseInt(v) || 1);
 }
 
+function setPayment(p) {
+  // toggle off if already selected
+  if (formPayment === p) {
+    formPayment = null;
+  } else {
+    formPayment = p;
+  }
+  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
+}
+
 function applyCount(c) {
   if (c >= 1 && c <= 7) {
     setCount(c);
@@ -835,6 +864,7 @@ function openAdd() {
   ['f-date','f-time','f-contact','f-phone','f-email','f-notes'].forEach(id => document.getElementById(id).value = '');
   setDuration(20);
   applyCount(1);
+  setPayment(null); formPayment = null; document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
   selectedOptions = new Set();
   renderOptionsList();
   selectedPilots = new Set();
@@ -859,6 +889,8 @@ function openEdit(id) {
   document.getElementById('f-notes').value = f.notes || '';
   setDuration(f.duration || 20);
   applyCount(f.count || 1);
+  formPayment = f.paymentMethod || null;
+  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
   selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
   renderOptionsList();
   const savedPilots = f.pilots || [];
@@ -884,6 +916,7 @@ async function saveForm() {
     count: formCount,
     email: document.getElementById('f-email').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
+    paymentMethod: formPayment || null,
     pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
     photo360: selectedOptions.has('photo360'),
