@@ -80,5 +80,21 @@
     "id": 5,
     "calEventId": "96qld19e7ddjh4r20hvalmunq8",
     "termsReceived": true
+  },
+  {
+    "date": "2026-06-13",
+    "time": "18:30",
+    "contact": "דודו בנון",
+    "phone": "+972 52-522-0979",
+    "duration": 40,
+    "count": 2,
+    "email": "",
+    "notes": "",
+    "pilots": [],
+    "photo": true,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 6,
+    "calEventId": null
   }
 ]
