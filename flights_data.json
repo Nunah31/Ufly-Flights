@@ -6,18 +6,19 @@
     "phone": "+972 54-329-8747",
     "duration": 40,
     "count": 4,
+    "email": "",
     "notes": "",
     "pilots": [
       "דור",
       "שרון",
-      "אביעד",
       "יריב"
     ],
     "photo": true,
     "photo360": false,
     "pilotDay": true,
     "id": 1,
-    "calEventId": "nd5dml4etgtfsml38tiqfesmoo"
+    "calEventId": "nd5dml4etgtfsml38tiqfesmoo",
+    "termsReceived": false
   },
   {
     "date": "2026-06-18",
