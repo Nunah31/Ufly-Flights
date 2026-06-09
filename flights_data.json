@@ -63,5 +63,21 @@
     "pilotDay": false,
     "id": 4,
     "calEventId": "ofrlc617scn2ik22qou2e4d1q4"
+  },
+  {
+    "date": "2026-06-09",
+    "time": "19:00",
+    "contact": "אסתר",
+    "phone": "0523339795",
+    "duration": 40,
+    "count": 1,
+    "email": "estherhabari@gmail.com",
+    "notes": "",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 5,
+    "calEventId": null
   }
 ]
