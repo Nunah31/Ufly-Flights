@@ -71,13 +71,14 @@
     "phone": "0523339795",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "estherhabari@gmail.com",
     "notes": "",
     "pilots": [],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 5,
-    "calEventId": "96qld19e7ddjh4r20hvalmunq8"
+    "calEventId": "96qld19e7ddjh4r20hvalmunq8",
+    "termsReceived": true
   }
 ]
