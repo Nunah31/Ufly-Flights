@@ -74,7 +74,9 @@
     "count": 2,
     "email": "dudusb@walla.com",
     "notes": "",
-    "pilots": [],
+    "pilots": [
+      "שרון"
+    ],
     "photo": true,
     "photo360": true,
     "pilotDay": false,
