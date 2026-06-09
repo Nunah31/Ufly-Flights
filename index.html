@@ -200,6 +200,7 @@
       <div class="field"><label>שעת הטיסה *</label><input type="time" id="f-time"></div>
       <div class="field form-full"><label>שם איש קשר *</label><input type="text" id="f-contact" placeholder="שם הלקוח"></div>
       <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr"></div>
+      <div class="field form-full"><label>מייל לקוח 📧</label><input type="email" id="f-email" placeholder="example@email.com" dir="ltr"></div>
 
       <div class="field form-full"><label>זמן טיסה (דקות)</label>
         <div class="toggle-row" id="duration-row">
@@ -667,8 +668,10 @@ function render() {
             ${f.count > 1 ? `<span class="dur-badge">🔁 ${f.count} טיסות</span>` : ''}
           </div>
           <div class="card-contact">📞 <strong>${f.contact}</strong> <span>${f.phone || ''}</span></div>
+          ${f.email ? `<div class="card-notes">📧 ${f.email}</div>` : ''}
           <div class="card-options">✅ ${optsStr}</div>
           ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
+          ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
         <div class="card-actions">
@@ -774,7 +777,7 @@ function openAdd() {
   document.getElementById('modal-title').textContent = '➕ טיסה חדשה';
   document.getElementById('btn-save').textContent = '➕ הוסף טיסה';
   document.getElementById('btn-delete').style.display = 'none';
-  ['f-date','f-time','f-contact','f-phone','f-notes'].forEach(id => document.getElementById(id).value = '');
+  ['f-date','f-time','f-contact','f-phone','f-email','f-notes'].forEach(id => document.getElementById(id).value = '');
   setDuration(20);
   applyCount(1);
   selectedOptions = new Set();
@@ -797,6 +800,7 @@ function openEdit(id) {
   document.getElementById('f-time').value = f.time || '';
   document.getElementById('f-contact').value = f.contact || '';
   document.getElementById('f-phone').value = f.phone || '';
+  document.getElementById('f-email').value = f.email || '';
   document.getElementById('f-notes').value = f.notes || '';
   setDuration(f.duration || 20);
   applyCount(f.count || 1);
@@ -823,6 +827,7 @@ async function saveForm() {
     date, time, contact, phone,
     duration: formDuration,
     count: formCount,
+    email: document.getElementById('f-email').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
@@ -835,7 +840,8 @@ async function saveForm() {
     const idx = flights.findIndex(x => x.id === editId);
     if (idx >= 0) {
       const calEventId = flights[idx].calEventId || null;
-      flights[idx] = { ...data, id: editId, calEventId };
+      const termsReceived = flights[idx].termsReceived || false;
+      flights[idx] = { ...data, id: editId, calEventId, termsReceived };
     }
     savedId = editId;
   } else {

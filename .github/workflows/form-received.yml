@@ -1,0 +1,93 @@
+name: עדכון טיסה - אישור תנאים
+on:
+  workflow_dispatch:
+    inputs:
+      passenger_name:
+        description: 'שם הנוסע'
+        required: false
+        default: ''
+      email:
+        description: 'מייל הנוסע'
+        required: false
+        default: ''
+      flight_date:
+        description: 'תאריך טיסה'
+        required: false
+        default: ''
+      phone:
+        description: 'טלפון'
+        required: false
+        default: ''
+
+jobs:
+  update-flight:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: עדכן נתוני טיסה
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const rawPhone     = '${{ inputs.phone }}';
+            const email        = '${{ inputs.email }}';
+            const passengerName = '${{ inputs.passenger_name }}';
+            const flightDateRaw = '${{ inputs.flight_date }}';
+
+            // Normalize phone: keep digits only, handle 0XX vs 972XX
+            const normPhone = p => p ? p.replace(/\D/g,'').replace(/^972/,'0') : '';
+            const inputPhone = normPhone(rawPhone);
+
+            // Parse date → YYYY-MM-DD
+            let flightDate = '';
+            if (flightDateRaw.includes('/')) {
+              const parts = flightDateRaw.split('/');
+              if (parts[2]) flightDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+            } else if (flightDateRaw.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              flightDate = flightDateRaw;
+            }
+
+            // Fetch flights_data.json
+            const { data } = await github.rest.repos.getContent({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              path:  'flights_data.json'
+            });
+
+            const flights = JSON.parse(Buffer.from(data.content, 'base64').toString('utf-8'));
+
+            // Match flight: phone is most reliable, fallback: first-name + date
+            let matchedIdx = -1;
+            for (let i = 0; i < flights.length; i++) {
+              const f = flights[i];
+              const fPhone = normPhone(f.phone || '');
+              const phoneMatch = inputPhone && fPhone && (fPhone === inputPhone ||
+                fPhone.slice(-8) === inputPhone.slice(-8));
+              const firstName = passengerName ? passengerName.trim().split(/\s+/)[0] : '';
+              const nameMatch = firstName && f.contact && f.contact.includes(firstName);
+              const dateMatch = !flightDate || f.date === flightDate;
+              if (phoneMatch || (nameMatch && dateMatch)) {
+                matchedIdx = i;
+                break;
+              }
+            }
+
+            if (matchedIdx === -1) {
+              core.warning(`לא נמצאה טיסה תואמת | שם: ${passengerName} | טלפון: ${rawPhone} | תאריך: ${flightDateRaw}`);
+              return;
+            }
+
+            flights[matchedIdx].termsReceived = true;
+            if (email) flights[matchedIdx].email = email;
+
+            const newContent = Buffer.from(JSON.stringify(flights, null, 2)).toString('base64');
+            await github.rest.repos.createOrUpdateFileContents({
+              owner:   context.repo.owner,
+              repo:    context.repo.repo,
+              path:    'flights_data.json',
+              message: `✅ אישור תנאים: ${passengerName || rawPhone}`,
+              content: newContent,
+              sha:     data.sha
+            });
+
+            core.notice(`טיסה עודכנה ✅ | ${flights[matchedIdx].contact} | ${flights[matchedIdx].date}`);
