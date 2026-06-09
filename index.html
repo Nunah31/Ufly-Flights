@@ -586,6 +586,7 @@ function buildCalEvent(f) {
   if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
   if (f.email) descParts.push(`מייל: ${f.email}`);
   if (f.termsReceived) descParts.push(`✅ תנאי טיסה אושרו`);
+  if (f.paymentMethod) descParts.push(`💳 שולם: ${f.paymentMethod}`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
 
   return {
