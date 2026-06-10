@@ -27,13 +27,19 @@
     "phone": "0504004833",
     "duration": 30,
     "count": 2,
+    "email": "",
     "notes": "",
-    "pilots": [],
+    "paymentMethod": null,
+    "source": "UFLY",
+    "pilots": [
+      "אביעד"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 2,
-    "calEventId": "gff25696ghourga5k4o66ue18o"
+    "calEventId": "gff25696ghourga5k4o66ue18o",
+    "termsReceived": false
   },
   {
     "date": "2026-06-19",
