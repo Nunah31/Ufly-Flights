@@ -219,7 +219,11 @@
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="form-grid">
-      <div class="field"><label>תאריך הטיסה *</label><input type="date" id="f-date"></div>
+      <div class="field" style="position:relative">
+        <label>תאריך הטיסה *</label>
+        <button type="button" class="time-btn placeholder" id="f-date-btn" onclick="triggerDatePicker()">בחר תאריך</button>
+        <input type="date" id="f-date" style="position:absolute;opacity:0;width:1px;height:1px;top:36px;right:0;pointer-events:none" onchange="onDateChange(this.value)">
+      </div>
       <div class="field"><label>שעת הטיסה *</label>
         <button type="button" class="time-btn placeholder" id="f-time-btn" onclick="openTimePicker()">בחר שעה</button>
         <input type="hidden" id="f-time">
@@ -858,6 +862,34 @@ function addCustomPilot() {
   renderPilotsList();
 }
 
+// ── Date picker display ──────────────────────────────────────────────────────
+function triggerDatePicker() {
+  const inp = document.getElementById('f-date');
+  try { inp.showPicker(); } catch(e) { inp.click(); }
+}
+function onDateChange(val) {
+  const btn = document.getElementById('f-date-btn');
+  if (val) {
+    const [y,m,d] = val.split('-');
+    btn.textContent = `${d}/${m}/${y}`;
+    btn.classList.remove('placeholder');
+  } else {
+    btn.textContent = 'בחר תאריך';
+    btn.classList.add('placeholder');
+  }
+}
+function setDateDisplay(val) {
+  const btn = document.getElementById('f-date-btn');
+  if (val) {
+    const [y,m,d] = val.split('-');
+    btn.textContent = `${d}/${m}/${y}`;
+    btn.classList.remove('placeholder');
+  } else {
+    btn.textContent = 'בחר תאריך';
+    btn.classList.add('placeholder');
+  }
+}
+
 // ── Custom clock time picker ─────────────────────────────────────────────────
 let tpHour = 8, tpMin = 0, tpMode = 'hour';
 const TP_CX = 140, TP_CY = 140, TP_OR = 108, TP_IR = 68;
@@ -1046,6 +1078,7 @@ function openAdd() {
   document.getElementById('btn-save').textContent = '➕ הוסף טיסה';
   document.getElementById('btn-delete').style.display = 'none';
   ['f-date','f-time','f-contact','f-phone','f-email','f-notes'].forEach(id => document.getElementById(id).value = '');
+  setDateDisplay('');
   const tb = document.getElementById('f-time-btn'); tb.textContent = 'בחר שעה'; tb.classList.add('placeholder');
   setDuration(20);
   applyCount(1);
@@ -1068,6 +1101,7 @@ function openEdit(id) {
   document.getElementById('btn-save').textContent = '💾 שמור שינויים';
   document.getElementById('btn-delete').style.display = '';
   document.getElementById('f-date').value = f.date;
+  setDateDisplay(f.date);
   document.getElementById('f-time').value = f.time || '';
   const ftb = document.getElementById('f-time-btn');
   if (f.time) { ftb.textContent = f.time; ftb.classList.remove('placeholder'); }
