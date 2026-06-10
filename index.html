@@ -317,9 +317,41 @@ let settingsSha = null;
 
 const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.googleusercontent.com';
 const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
-let gAccessToken = null;
-let tokenClient  = null;
+let gAccessToken  = null;
+let gTokenExpiry  = 0;       // timestamp (ms) when token expires
+let gRefreshTimer = null;    // proactive silent-refresh timer
+let tokenClient   = null;
 let pendingCalTermsSync = [];
+
+function setGoogleToken(token) {
+  gAccessToken = token;
+  gTokenExpiry  = Date.now() + 55 * 60 * 1000; // 55 min (tokens last 60 min)
+  updateCalendarStatus();
+  render();
+  // Proactive refresh at 54 minutes — before the token actually expires
+  if (gRefreshTimer) clearTimeout(gRefreshTimer);
+  gRefreshTimer = setTimeout(() => {
+    if (tokenClient) tryAutoConnectGoogle();
+  }, 54 * 60 * 1000);
+}
+
+function isTokenValid() {
+  return !!(gAccessToken && Date.now() < gTokenExpiry);
+}
+
+// Ensure a valid token before any calendar operation.
+// Tries silent refresh first; only shows popup if that fails.
+async function ensureGoogleToken() {
+  if (isTokenValid()) return true;
+  if (!window.google) return false;
+  if (!tokenClient) initGoogleAuth();
+  // Try silent first
+  const silent = await tryAutoConnectGoogle();
+  if (silent) return true;
+  // Fall back to interactive login
+  await connectGoogleAsync();
+  return isTokenValid();
+}
 
 const OPTIONS_CFG = [
   { key: 'photo',    label: '📷 צילום' },
@@ -538,9 +570,7 @@ function initGoogleAuth() {
     prompt: 'select_account',
     callback: (resp) => {
       if (resp.access_token) {
-        gAccessToken = resp.access_token;
-        updateCalendarStatus();
-        render();
+        setGoogleToken(resp.access_token);
         flushPendingCalTermsSync();
       }
     }
@@ -558,9 +588,7 @@ function connectGoogleAsync() {
     tokenClient.callback = (resp) => {
       tokenClient.callback = originalCallback;
       if (resp.access_token) {
-        gAccessToken = resp.access_token;
-        updateCalendarStatus();
-        render();
+        setGoogleToken(resp.access_token);
         resolve(true);
       } else {
         resolve(false);
@@ -570,17 +598,15 @@ function connectGoogleAsync() {
   });
 }
 async function tryAutoConnectGoogle() {
-  if (!window.google) return;
+  if (!window.google) return false;
   if (!tokenClient) initGoogleAuth();
-  if (!tokenClient) return;
+  if (!tokenClient) return false;
   return new Promise((resolve) => {
     const prev = tokenClient.callback;
     tokenClient.callback = (resp) => {
       tokenClient.callback = prev;
       if (resp.access_token) {
-        gAccessToken = resp.access_token;
-        updateCalendarStatus();
-        render();
+        setGoogleToken(resp.access_token);
         flushPendingCalTermsSync();
         resolve(true);
       } else {
@@ -668,7 +694,7 @@ async function syncCalendarEvent(f) {
         { method: 'PUT', headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
       );
       if (r.ok) { const d = await r.json(); return d.id; }
-      if (r.status === 401) { gAccessToken = null; updateCalendarStatus(); return 'auth_expired'; }
+      if (r.status === 401) { gAccessToken = null; gTokenExpiry = 0; updateCalendarStatus(); return 'auth_expired'; }
       if (r.status !== 404 && r.status !== 410) return null;
       if (idx >= 0) flights[idx].calEventId = null;
     } catch(e) { return null; }
@@ -691,10 +717,7 @@ async function syncCalendarEvent(f) {
 
 async function deleteCalendarEvent(f) {
   if (!f || !f.calEventId) return;
-  if (!gAccessToken && window.google) {
-    await connectGoogleAsync();
-  }
-  if (!gAccessToken) return;
+  if (!await ensureGoogleToken()) return;
   try {
     await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events/${f.calEventId}`,
@@ -708,26 +731,25 @@ async function handleCalClick(id) {
   if (!f) return;
   if (!f.time) { alert('יש להזין שעת טיסה לפני הוספה ליומן'); return; }
 
-  if (!gAccessToken && window.google) {
-    await connectGoogleAsync();
+  const indicator = document.getElementById('save-indicator');
+
+  if (window.google) {
+    indicator.textContent = '🔄 בודק חיבור לגוגל...';
+    indicator.classList.add('visible');
+    const ok = await ensureGoogleToken();
+    if (ok) {
+      indicator.textContent = '📅 מסנכרן ליומן...';
+      const hadEvent = !!f.calEventId;
+      const result = await syncCalendarEvent(f);
+      indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה בסנכרון יומן';
+      setTimeout(() => indicator.classList.remove('visible'), 2500);
+      render();
+      return;
+    }
+    indicator.classList.remove('visible');
   }
 
-  if (gAccessToken) {
-    const indicator = document.getElementById('save-indicator');
-    indicator.textContent = '📅 מסנכרן ליומן...';
-    indicator.classList.add('visible');
-    const hadEvent = !!f.calEventId;
-    let result = await syncCalendarEvent(f);
-    if (result === 'auth_expired') {
-      // token expired — reconnect and retry automatically
-      indicator.textContent = '🔄 מתחברת מחדש לגוגל...';
-      await connectGoogleAsync();
-      if (gAccessToken) result = await syncCalendarEvent(f);
-    }
-    indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה בסנכרון יומן';
-    setTimeout(() => indicator.classList.remove('visible'), 2500);
-    render();
-  } else if (!f.calEventId) {
+  if (!f.calEventId) {
     window.open(buildCalUrl(f), '_blank');
   } else {
     alert('כדי לעדכן את האירוע הקיים ביומן יש להתחבר לחשבון Google. התחברי ליומן גוגל בהגדרות (⚙️) ונסי שוב — כך נמנע יצירת אירוע כפול.');
