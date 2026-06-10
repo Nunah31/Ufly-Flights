@@ -80,6 +80,27 @@
   .field input:focus, .field select:focus, .field textarea:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
   .field textarea { resize: vertical; line-height: 1.5; }
 
+  /* ── Custom time picker ── */
+  .time-btn { width: 100%; padding: 9px 11px; border-radius: 8px; border: 1px solid #D1D5DB; font-size: 16px; font-family: inherit; background: white; color: #111827; cursor: pointer; text-align: right; }
+  .time-btn:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); outline: none; }
+  .time-btn.placeholder { color: #9CA3AF; }
+  .tp-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
+  .tp-overlay.open { display: flex; }
+  .tp-box { background: white; border-radius: 20px; padding: 24px 20px 20px; width: 320px; max-width: 95vw; text-align: center; }
+  .tp-title { font-size: 17px; font-weight: 700; color: #0C4A6E; margin-bottom: 18px; }
+  .tp-display { font-size: 52px; font-weight: 700; color: #0C4A6E; letter-spacing: 4px; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+  .tp-cols { display: flex; gap: 16px; justify-content: center; margin-bottom: 18px; }
+  .tp-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .tp-col-label { font-size: 13px; color: #6B7280; font-weight: 600; }
+  .tp-spin { background: #E2E8F0; border: none; border-radius: 8px; width: 52px; height: 40px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .tp-spin:active { background: #CBD5E1; }
+  .tp-val { font-size: 36px; font-weight: 700; color: #0F172A; min-width: 52px; font-variant-numeric: tabular-nums; }
+  .tp-mins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px; }
+  .tp-min-btn { padding: 8px 0; border-radius: 8px; border: none; font-size: 15px; font-family: inherit; background: #F1F5F9; color: #374151; cursor: pointer; font-weight: 500; }
+  .tp-min-btn.active { background: #0EA5E9; color: white; font-weight: 700; }
+  .tp-confirm { width: 100%; padding: 13px; background: #0EA5E9; color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; }
+  .tp-confirm:hover { background: #0284C7; }
+
   .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .toggle-row-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); }
   .toggle-row-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); }
@@ -200,7 +221,10 @@
     </div>
     <div class="form-grid">
       <div class="field"><label>תאריך הטיסה *</label><input type="date" id="f-date"></div>
-      <div class="field"><label>שעת הטיסה *</label><input type="time" id="f-time"></div>
+      <div class="field"><label>שעת הטיסה *</label>
+        <button type="button" class="time-btn placeholder" id="f-time-btn" onclick="openTimePicker()">בחר שעה</button>
+        <input type="hidden" id="f-time">
+      </div>
       <div class="field form-full"><label>שם איש קשר *</label><input type="text" id="f-contact" placeholder="שם הלקוח" autocomplete="off"></div>
       <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr" autocomplete="off"></div>
       <div class="field form-full"><label>מייל לקוח 📧</label><input type="email" id="f-email" placeholder="example@email.com" dir="ltr" autocomplete="off"></div>
@@ -810,6 +834,41 @@ function addCustomPilot() {
   renderPilotsList();
 }
 
+// ── Custom time picker ──────────────────────────────────────────────────────
+let tpHour = 8, tpMin = 0;
+const TP_MIN_PRESETS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+function tpPad(n) { return String(n).padStart(2,'0'); }
+function tpRefresh() {
+  document.getElementById('tp-h').textContent = tpPad(tpHour);
+  document.getElementById('tp-m').textContent = tpPad(tpMin);
+  document.getElementById('tp-display').textContent = `${tpPad(tpHour)}:${tpPad(tpMin)}`;
+  document.getElementById('tp-mins').innerHTML = TP_MIN_PRESETS.map(m =>
+    `<button class="tp-min-btn${tpMin===m?' active':''}" onclick="tpSetMin(${m})">${tpPad(m)}</button>`
+  ).join('');
+}
+function tpAdjustHour(d) { tpHour = (tpHour + d + 24) % 24; tpRefresh(); }
+function tpAdjustMin(d)  { tpMin  = (tpMin  + d + 60) % 60; tpRefresh(); }
+function tpSetMin(m)     { tpMin = m; tpRefresh(); }
+function openTimePicker() {
+  const cur = document.getElementById('f-time').value;
+  if (cur) { const [h,m] = cur.split(':'); tpHour = parseInt(h)||0; tpMin = parseInt(m)||0; }
+  tpRefresh();
+  document.getElementById('tp-overlay').classList.add('open');
+}
+function tpConfirm() {
+  const val = `${tpPad(tpHour)}:${tpPad(tpMin)}`;
+  document.getElementById('f-time').value = val;
+  const btn = document.getElementById('f-time-btn');
+  btn.textContent = val;
+  btn.classList.remove('placeholder');
+  document.getElementById('tp-overlay').classList.remove('open');
+}
+function tpOverlayClick(e) {
+  if (e.target === document.getElementById('tp-overlay')) {
+    document.getElementById('tp-overlay').classList.remove('open');
+  }
+}
+
 function setDuration(d) {
   formDuration = d;
   document.querySelectorAll('#duration-row .toggle-opt').forEach(b => b.classList.toggle('active', parseInt(b.dataset.d) === d));
@@ -885,6 +944,7 @@ function openAdd() {
   document.getElementById('btn-save').textContent = '➕ הוסף טיסה';
   document.getElementById('btn-delete').style.display = 'none';
   ['f-date','f-time','f-contact','f-phone','f-email','f-notes'].forEach(id => document.getElementById(id).value = '');
+  const tb = document.getElementById('f-time-btn'); tb.textContent = 'בחר שעה'; tb.classList.add('placeholder');
   setDuration(20);
   applyCount(1);
   setPayment(null); formPayment = null; document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
@@ -907,6 +967,9 @@ function openEdit(id) {
   document.getElementById('btn-delete').style.display = '';
   document.getElementById('f-date').value = f.date;
   document.getElementById('f-time').value = f.time || '';
+  const ftb = document.getElementById('f-time-btn');
+  if (f.time) { ftb.textContent = f.time; ftb.classList.remove('placeholder'); }
+  else { ftb.textContent = 'בחר שעה'; ftb.classList.add('placeholder'); }
   document.getElementById('f-contact').value = f.contact || '';
   document.getElementById('f-phone').value = f.phone || '';
   document.getElementById('f-email').value = f.email || '';
@@ -1270,5 +1333,30 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- Time Picker -->
+<div class="tp-overlay" id="tp-overlay" onclick="tpOverlayClick(event)">
+  <div class="tp-box">
+    <div class="tp-title">בחרי שעה</div>
+    <div class="tp-display" id="tp-display">08:00</div>
+    <div class="tp-cols">
+      <div class="tp-col">
+        <div class="tp-col-label">שעה</div>
+        <button class="tp-spin" onclick="tpAdjustHour(1)">▲</button>
+        <div class="tp-val" id="tp-h">08</div>
+        <button class="tp-spin" onclick="tpAdjustHour(-1)">▼</button>
+      </div>
+      <div style="font-size:36px;font-weight:700;color:#0C4A6E;align-self:center;padding-top:20px">:</div>
+      <div class="tp-col">
+        <div class="tp-col-label">דקות</div>
+        <button class="tp-spin" onclick="tpAdjustMin(5)">▲</button>
+        <div class="tp-val" id="tp-m">00</div>
+        <button class="tp-spin" onclick="tpAdjustMin(-5)">▼</button>
+      </div>
+    </div>
+    <div class="tp-mins" id="tp-mins"></div>
+    <button class="tp-confirm" onclick="tpConfirm()">✔ אישור</button>
+  </div>
+</div>
 </body>
 </html>
