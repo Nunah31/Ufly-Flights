@@ -1437,15 +1437,14 @@ async function init() {
     if (migrateSettings()) {} // local-only: already saved to localStorage inside migrateSettings
   }
   render();
-  if (window.google) initGoogleAuth();
-  else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
-  // if already authenticated, sync any pending calendar updates;
-  // otherwise try silent Google reconnect
-  if (gAccessToken) {
-    flushPendingCalTermsSync();
-  } else if (pendingCalTermsSync.length > 0 && window.google) {
+  // Init Google and always attempt silent reconnect on load
+  const doGoogleInit = () => {
+    initGoogleAuth();
+    // Always try silent reconnect on startup — no popup, just restores the token quietly
     tryAutoConnectGoogle();
-  }
+  };
+  if (window.google) doGoogleInit();
+  else window.addEventListener('load', () => { if (window.google) doGoogleInit(); });
 }
 function saveToken() {
   const t = document.getElementById('token-input').value.trim();
