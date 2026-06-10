@@ -1063,6 +1063,30 @@ function renderSourceRow() {
 function setSource(s) {
   formSource = s;
   renderSourceRow();
+  const contactEl = document.getElementById('f-contact');
+  const phoneEl   = document.getElementById('f-phone');
+  if (s && s !== 'UFLY') {
+    // auto-fill contact = pilot name, phone = pilot phone
+    const pilot = (settings.pilots || []).find(p => p.name === s);
+    contactEl.value = s;
+    phoneEl.value   = pilot ? (pilot.phone || '') : '';
+    contactEl.setAttribute('readonly', 'true');
+    phoneEl.setAttribute('readonly', 'true');
+    contactEl.style.background = '#F1F5F9';
+    phoneEl.style.background   = '#F1F5F9';
+  } else {
+    // restore editable
+    contactEl.removeAttribute('readonly');
+    phoneEl.removeAttribute('readonly');
+    contactEl.style.background = '';
+    phoneEl.style.background   = '';
+    // only clear if they were auto-filled (i.e. previous source was a pilot)
+    if (contactEl.value === (settings.pilots || []).find(p => p.name)?.name ||
+        (settings.pilots || []).some(p => p.name === contactEl.value)) {
+      contactEl.value = '';
+      phoneEl.value   = '';
+    }
+  }
 }
 
 function setPayment(p) {
@@ -1106,6 +1130,7 @@ function openAdd() {
   applyCount(1);
   setPayment(null); formPayment = null; document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
   formSource = 'UFLY'; renderSourceRow();
+  ['f-contact','f-phone'].forEach(id => { const el=document.getElementById(id); el.removeAttribute('readonly'); el.style.background=''; });
   selectedOptions = new Set();
   renderOptionsList();
   selectedPilots = new Set();
@@ -1137,6 +1162,15 @@ function openEdit(id) {
   formPayment = f.paymentMethod || null;
   document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
   formSource = f.source || 'UFLY';
+  // restore readonly state for pilot-sourced flights
+  const cEl = document.getElementById('f-contact'), pEl = document.getElementById('f-phone');
+  if (formSource && formSource !== 'UFLY') {
+    cEl.setAttribute('readonly','true'); cEl.style.background='#F1F5F9';
+    pEl.setAttribute('readonly','true'); pEl.style.background='#F1F5F9';
+  } else {
+    cEl.removeAttribute('readonly'); cEl.style.background='';
+    pEl.removeAttribute('readonly'); pEl.style.background='';
+  }
   selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
   renderOptionsList();
   const savedPilots = f.pilots || [];
@@ -1155,7 +1189,8 @@ async function saveForm() {
   const time = document.getElementById('f-time').value;
   const contact = document.getElementById('f-contact').value.trim();
   const phone = document.getElementById('f-phone').value.trim();
-  if (!date || !time || !contact || !phone) { alert('נא למלא תאריך, שעה, שם איש קשר וטלפון'); return; }
+  const phoneRequired = !formSource || formSource === 'UFLY';
+  if (!date || !time || !contact || (phoneRequired && !phone)) { alert('נא למלא תאריך, שעה, שם איש קשר' + (phoneRequired ? ' וטלפון' : '')); return; }
 
   const data = {
     date, time, contact, phone,
