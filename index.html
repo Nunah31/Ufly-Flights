@@ -323,7 +323,11 @@ const OPTIONS_CFG = [
   { key: 'pilotDay', label: '🧑‍✈️ טייס ליום אחד' },
 ];
 
-const BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב'];
+let BASE_PILOTS = ['דור', 'שרון', 'אביעד', 'יריב', 'שגב']; // overridden by settings.pilots
+function rebuildPilots() {
+  if (settings.pilots && settings.pilots.length > 0)
+    BASE_PILOTS = settings.pilots.map(p => p.name);
+}
 
 const TEMPLATES_VERSION = 7;
 
@@ -351,10 +355,24 @@ const DEFAULT_SETTINGS = {
 `היי {שם}, בשל תנאי מזג האוויר לא ניתן לקיים את הטיסה במועד שתואם עבורך. אנא צור/י קשר לתאום מועד חדש 🙏🪂`,
   pilotMsgTemplate:
 `היי {שם_טייס}, פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`,
-  pilotPhones: {}
+  pilotPhones: {},
+  pilots: [
+    {name:'דור',   phone:''},
+    {name:'שרון',  phone:''},
+    {name:'אביעד', phone:''},
+    {name:'יריב',  phone:''},
+    {name:'שגב',   phone:''}
+  ]
 };
 
 let settings = { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') };
+// migrate: build pilots array from legacy pilotPhones if missing
+if (!settings.pilots || settings.pilots.length === 0) {
+  settings.pilots = BASE_PILOTS.map(name => ({
+    name, phone: (settings.pilotPhones && settings.pilotPhones[name]) || ''
+  }));
+}
+rebuildPilots();
 
 let flights = [];
 let currentFilter = 'future';
@@ -468,6 +486,13 @@ async function loadSettingsFromGithub() {
     for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const remote = JSON.parse(new TextDecoder('utf-8').decode(bytes));
     settings = { ...DEFAULT_SETTINGS, ...remote };
+    // migrate legacy pilotPhones → pilots array
+    if (!settings.pilots || settings.pilots.length === 0) {
+      settings.pilots = ['דור','שרון','אביעד','יריב','שגב'].map(name => ({
+        name, phone: (settings.pilotPhones && settings.pilotPhones[name]) || ''
+      }));
+    }
+    rebuildPilots();
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     return true;
   } catch(e) { return false; }
@@ -1197,6 +1222,10 @@ function openPostpone(id) {
 let sendPilotNames = new Set();
 
 function getPilotPhone(name) {
+  if (settings.pilots) {
+    const p = settings.pilots.find(x => x.name === name);
+    if (p) return p.phone || '';
+  }
   return (settings.pilotPhones && settings.pilotPhones[name]) || '';
 }
 
@@ -1271,13 +1300,45 @@ function openSettings() {
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; popOverlayHistory(); }
 function renderPilotPhonesList() {
-  const allPilots = [...BASE_PILOTS, ...customPilots];
-  const container = document.getElementById('pilot-phones-list');
-  container.innerHTML = allPilots.map(name => `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="min-width:55px;font-size:14px;color:#374151">${name}</span>
-      <input type="tel" class="pilot-phone-input" data-pilot-name="${name.replace(/"/g,'&quot;')}" value="${getPilotPhone(name)}" placeholder="050-1234567" style="flex:1;padding:8px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;direction:ltr">
-    </div>`).join('');
+  const pilots = settings.pilots || [];
+  const last = pilots.length - 1;
+  const btnBase = 'border:none;border-radius:6px;cursor:pointer;font-size:13px;padding:3px 6px;font-family:inherit;';
+  document.getElementById('pilot-phones-list').innerHTML = pilots.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <button style="${btnBase}background:${i===0?'#F1F5F9':'#E2E8F0'};color:${i===0?'#CBD5E1':'#374151'}" ${i===0?'disabled':''} onclick="movePilot(${i},-1)">▲</button>
+        <button style="${btnBase}background:${i===last?'#F1F5F9':'#E2E8F0'};color:${i===last?'#CBD5E1':'#374151'}" ${i===last?'disabled':''} onclick="movePilot(${i},1)">▼</button>
+      </div>
+      <span style="min-width:48px;font-size:14px;font-weight:600;color:#374151">${p.name}</span>
+      <input type="tel" value="${p.phone||''}" placeholder="050-1234567"
+        oninput="settings.pilots[${i}].phone=this.value"
+        style="flex:1;padding:8px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;direction:ltr">
+      <button onclick="removePilot(${i})" style="${btnBase}background:#FEE2E2;color:#DC2626;padding:4px 8px">🗑️</button>
+    </div>`).join('') +
+    `<div style="display:flex;gap:6px;margin-top:10px;align-items:center">
+      <input id="new-pilot-name" type="text" placeholder="שם טייס חדש" style="flex:1;padding:8px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit">
+      <input id="new-pilot-phone" type="tel" placeholder="050-..." style="flex:1;padding:8px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;direction:ltr">
+      <button onclick="addPilotToList()" style="${btnBase}background:#0EA5E9;color:white;padding:7px 12px;font-size:15px;font-weight:700">+</button>
+    </div>`;
+}
+function movePilot(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= settings.pilots.length) return;
+  [settings.pilots[i], settings.pilots[j]] = [settings.pilots[j], settings.pilots[i]];
+  renderPilotPhonesList();
+}
+function removePilot(i) {
+  if (!confirm(`למחוק את הטייס "${settings.pilots[i].name}"?`)) return;
+  settings.pilots.splice(i, 1);
+  renderPilotPhonesList();
+}
+function addPilotToList() {
+  const name = (document.getElementById('new-pilot-name').value || '').trim();
+  if (!name) { alert('יש להזין שם טייס'); return; }
+  if (settings.pilots.find(p => p.name === name)) { alert('הטייס כבר קיים ברשימה'); return; }
+  const phone = (document.getElementById('new-pilot-phone').value || '').trim();
+  settings.pilots.push({name, phone});
+  renderPilotPhonesList();
 }
 function saveSettings() {
   const token = document.getElementById('settings-token').value.trim();
@@ -1294,12 +1355,11 @@ function saveSettings() {
   settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
   settings.msgTemplatePostpone = document.getElementById('settings-template-postpone').value;
   settings.pilotMsgTemplate = document.getElementById('settings-template-pilots').value;
-  const phones = {};
-  document.querySelectorAll('.pilot-phone-input').forEach(inp => {
-    const val = inp.value.trim();
-    if (val) phones[inp.dataset.pilotName] = val;
-  });
-  settings.pilotPhones = phones;
+  // pilots array is already updated live via oninput / movePilot / removePilot / addPilotToList
+  // keep pilotPhones in sync for backwards compat
+  settings.pilotPhones = {};
+  (settings.pilots || []).forEach(p => { if (p.phone) settings.pilotPhones[p.name] = p.phone; });
+  rebuildPilots();
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   saveSettingsToGithub();
   closeSettings();
@@ -1392,7 +1452,7 @@ if (!localStorage.getItem('gh_token')) {
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🧑‍✈️ הודעה לטייסים (לכל טיסה נבחרת)</label>
     <textarea id="settings-template-pilots" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
 
-    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">📞 טלפוני טייסים (לשליחה ישירה בוואטסאפ)</label>
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px">🧑‍✈️ ניהול טייסים — שם, טלפון וסדר</label>
     <div id="pilot-phones-list" style="margin-bottom:16px"></div>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:6px;margin-top:4px">📅 יומן גוגל</label>
