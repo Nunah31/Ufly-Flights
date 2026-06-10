@@ -201,8 +201,8 @@
     <div class="form-grid">
       <div class="field"><label>תאריך הטיסה *</label><input type="date" id="f-date"></div>
       <div class="field"><label>שעת הטיסה *</label><input type="time" id="f-time"></div>
-      <div class="field form-full"><label>שם איש קשר *</label><input type="text" id="f-contact" placeholder="שם הלקוח"></div>
-      <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr"></div>
+      <div class="field form-full"><label>שם איש קשר *</label><input type="text" id="f-contact" placeholder="שם הלקוח" autocomplete="off"></div>
+      <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr" autocomplete="off"></div>
       <div class="field form-full"><label>מייל לקוח 📧</label><input type="email" id="f-email" placeholder="example@email.com" dir="ltr" autocomplete="off"></div>
 
       <div class="field form-full"><label>✈️ טיסה של:</label>
@@ -243,7 +243,7 @@
         <label>🧑‍✈️ טייסים</label>
         <div class="opt-list" id="pilots-list"></div>
         <div class="custom-add-row">
-          <input type="text" id="custom-pilot-input" placeholder="הוסף טייס...">
+          <input type="text" id="custom-pilot-input" placeholder="הוסף טייס..." autocomplete="off">
           <button onclick="addCustomPilot()">הוסף</button>
         </div>
       </div>
