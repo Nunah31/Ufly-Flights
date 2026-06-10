@@ -205,6 +205,10 @@
       <div class="field form-full"><label>טלפון *</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr"></div>
       <div class="field form-full"><label>מייל לקוח 📧</label><input type="email" id="f-email" placeholder="example@email.com" dir="ltr"></div>
 
+      <div class="field form-full"><label>✈️ טיסה של:</label>
+        <div class="toggle-row" id="source-row" style="flex-wrap:wrap"></div>
+      </div>
+
       <div class="field form-full"><label>זמן טיסה (דקות)</label>
         <div class="toggle-row" id="duration-row">
           <button class="toggle-opt" data-d="20" onclick="setDuration(20)">20</button>
@@ -335,6 +339,7 @@ let editId = null;
 let formDuration = 20;
 let formCount = 1;
 let formPayment = null;
+let formSource = 'UFLY';
 let selectedOptions = new Set();
 let selectedPilots = new Set();
 let customPilots = [];
@@ -567,7 +572,8 @@ function includesLabel(f) {
 
 function eventSummary(f) {
   const countPrefix = (f.count > 1) ? `${f.count} טיסות · ` : '';
-  return `${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
+  const sourcePrefix = (f.source && f.source !== 'UFLY') ? `${f.source} · ` : '';
+  return `${sourcePrefix}${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
 }
 
 function buildCalEvent(f) {
@@ -689,6 +695,7 @@ function buildCalUrl(f) {
   descParts.push(`איש קשר: ${f.contact}${f.phone ? ' | ' + f.phone : ''}`);
   descParts.push(`טיסה · משך ${f.duration} דקות`);
   descParts.push(`כולל: ${includesLabel(f)}`);
+  if (f.source && f.source !== 'UFLY') descParts.push(`✈️ טיסה של: ${f.source}`);
   if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
   const det = encodeURIComponent(descParts.join('\n'));
@@ -743,6 +750,7 @@ function render() {
           </div>
           <div class="card-contact">📞 <strong>${f.contact}</strong> <span>${f.phone || ''}</span></div>
           ${f.email ? `<div class="card-notes">📧 ${f.email}</div>` : ''}
+          ${f.source && f.source !== 'UFLY' ? `<div class="card-notes" style="color:#B45309;font-weight:600">✈️ טיסה של: ${f.source}</div>` : ''}
           <div class="card-options">✅ ${optsStr}</div>
           ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
           ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
@@ -828,6 +836,20 @@ function onCountOtherInput(v) {
   formCount = Math.max(1, parseInt(v) || 1);
 }
 
+function renderSourceRow() {
+  const allSources = ['UFLY', ...BASE_PILOTS, ...customPilots];
+  const row = document.getElementById('source-row');
+  if (!row) return;
+  row.innerHTML = allSources.map(s =>
+    `<button class="toggle-opt${formSource===s?' active':''}" style="flex:0 0 auto;min-width:70px" onclick="setSource('${s.replace(/'/g,"\\'")}')">` +
+    `${s}</button>`
+  ).join('');
+}
+function setSource(s) {
+  formSource = s;
+  renderSourceRow();
+}
+
 function setPayment(p) {
   // toggle off if already selected
   if (formPayment === p) {
@@ -866,6 +888,7 @@ function openAdd() {
   setDuration(20);
   applyCount(1);
   setPayment(null); formPayment = null; document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
+  formSource = 'UFLY'; renderSourceRow();
   selectedOptions = new Set();
   renderOptionsList();
   selectedPilots = new Set();
@@ -892,12 +915,14 @@ function openEdit(id) {
   applyCount(f.count || 1);
   formPayment = f.paymentMethod || null;
   document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
+  formSource = f.source || 'UFLY';
   selectedOptions = new Set(OPTIONS_CFG.filter(o => f[o.key]).map(o => o.key));
   renderOptionsList();
   const savedPilots = f.pilots || [];
   selectedPilots = new Set(savedPilots);
   customPilots = savedPilots.filter(n => !BASE_PILOTS.includes(n));
   renderPilotsList();
+  renderSourceRow();
   document.getElementById('modal').classList.add('open');
   pushOverlayState('modal');
 }
@@ -918,6 +943,7 @@ async function saveForm() {
     email: document.getElementById('f-email').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     paymentMethod: formPayment || null,
+    source: formSource || 'UFLY',
     pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
     photo360: selectedOptions.has('photo360'),
