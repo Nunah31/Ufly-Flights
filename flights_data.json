@@ -92,7 +92,7 @@
     "phone": "⁦+972 52-811-3439⁩",
     "duration": 40,
     "count": 1,
-    "email": "אהרוניקו",
+    "email": "",
     "notes": "",
     "paymentMethod": null,
     "source": "יריב",
@@ -101,6 +101,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 7,
-    "calEventId": "d1d7elp1rgfnloaunon5jh7v7o"
+    "calEventId": "d1d7elp1rgfnloaunon5jh7v7o",
+    "termsReceived": false
   }
 ]
