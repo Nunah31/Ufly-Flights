@@ -86,20 +86,19 @@
   .time-btn.placeholder { color: #9CA3AF; }
   .tp-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
   .tp-overlay.open { display: flex; }
-  .tp-box { background: white; border-radius: 20px; padding: 24px 20px 20px; width: 320px; max-width: 95vw; text-align: center; }
-  .tp-title { font-size: 17px; font-weight: 700; color: #0C4A6E; margin-bottom: 18px; }
-  .tp-display { font-size: 52px; font-weight: 700; color: #0C4A6E; letter-spacing: 4px; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
-  .tp-cols { display: flex; gap: 16px; justify-content: center; margin-bottom: 18px; }
-  .tp-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .tp-col-label { font-size: 13px; color: #6B7280; font-weight: 600; }
-  .tp-spin { background: #E2E8F0; border: none; border-radius: 8px; width: 52px; height: 40px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .tp-spin:active { background: #CBD5E1; }
-  .tp-val { font-size: 36px; font-weight: 700; color: #0F172A; min-width: 52px; font-variant-numeric: tabular-nums; }
-  .tp-mins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px; }
-  .tp-min-btn { padding: 8px 0; border-radius: 8px; border: none; font-size: 15px; font-family: inherit; background: #F1F5F9; color: #374151; cursor: pointer; font-weight: 500; }
-  .tp-min-btn.active { background: #0EA5E9; color: white; font-weight: 700; }
-  .tp-confirm { width: 100%; padding: 13px; background: #0EA5E9; color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; }
+  .tp-box { background: white; border-radius: 20px; padding: 20px 20px 16px; width: 310px; max-width: 95vw; text-align: center; }
+  .tp-disp-row { display: flex; flex-direction: row; align-items: center; justify-content: center; direction: ltr; gap: 4px; margin-bottom: 16px; }
+  .tp-disp-part { font-size: 52px; font-weight: 700; color: #64748B; width: 72px; text-align: center; border-radius: 10px; cursor: pointer; padding: 2px 4px; font-variant-numeric: tabular-nums; transition: background 0.15s; }
+  .tp-disp-part.tp-active { color: #0C4A6E; background: #E0F2FE; }
+  .tp-disp-sep { font-size: 48px; font-weight: 700; color: #94A3B8; margin: 0 2px; }
+  .tp-clock-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+  .tp-clock-svg { cursor: pointer; }
+  .tp-clock-label { font-size: 12px; color: #94A3B8; margin-bottom: 4px; letter-spacing: 1px; }
+  .tp-btns { display: flex; gap: 10px; direction: ltr; }
+  .tp-confirm { flex: 1; padding: 12px; background: #0C4A6E; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; }
   .tp-confirm:hover { background: #0284C7; }
+  .tp-cancel { flex: 1; padding: 12px; background: #F1F5F9; color: #374151; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; }
+  .tp-cancel:hover { background: #E2E8F0; }
 
   .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .toggle-row-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); }
@@ -834,25 +833,106 @@ function addCustomPilot() {
   renderPilotsList();
 }
 
-// ── Custom time picker ──────────────────────────────────────────────────────
-let tpHour = 8, tpMin = 0;
-const TP_MIN_PRESETS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+// ── Custom clock time picker ─────────────────────────────────────────────────
+let tpHour = 8, tpMin = 0, tpMode = 'hour';
+const TP_CX = 140, TP_CY = 140, TP_OR = 108, TP_IR = 68;
 function tpPad(n) { return String(n).padStart(2,'0'); }
-function tpRefresh() {
-  document.getElementById('tp-h').textContent = tpPad(tpHour);
-  document.getElementById('tp-m').textContent = tpPad(tpMin);
-  document.getElementById('tp-display').textContent = `${tpPad(tpHour)}:${tpPad(tpMin)}`;
-  document.getElementById('tp-mins').innerHTML = TP_MIN_PRESETS.map(m =>
-    `<button class="tp-min-btn${tpMin===m?' active':''}" onclick="tpSetMin(${m})">${tpPad(m)}</button>`
-  ).join('');
+
+function tpAngle(val, total) { return (val / total) * 2 * Math.PI - Math.PI / 2; }
+
+function tpHourPos(h) {
+  // outer ring: 1-12 | inner ring: 0, 13-23
+  const inner = (h === 0 || h >= 13);
+  const r = inner ? TP_IR : TP_OR;
+  const normalized = inner ? (h === 0 ? 0 : h - 12) : h; // 0→0, 13→1 … 23→11
+  const angle = tpAngle(normalized, 12);
+  return { x: TP_CX + r * Math.cos(angle), y: TP_CY + r * Math.sin(angle) };
 }
-function tpAdjustHour(d) { tpHour = (tpHour + d + 24) % 24; tpRefresh(); }
-function tpAdjustMin(d)  { tpMin  = (tpMin  + d + 60) % 60; tpRefresh(); }
-function tpSetMin(m)     { tpMin = m; tpRefresh(); }
+
+function tpMinPos(m) {
+  const angle = tpAngle(m / 5, 12);
+  return { x: TP_CX + TP_OR * Math.cos(angle), y: TP_CY + TP_OR * Math.sin(angle) };
+}
+
+function tpRender() {
+  // Display row
+  const hEl = document.getElementById('tp-disp-h');
+  const mEl = document.getElementById('tp-disp-m');
+  hEl.textContent = tpPad(tpHour);
+  mEl.textContent = tpPad(tpMin);
+  hEl.classList.toggle('tp-active', tpMode === 'hour');
+  mEl.classList.toggle('tp-active', tpMode === 'min');
+  document.getElementById('tp-clock-label').textContent = tpMode === 'hour' ? 'שעה' : 'דקות';
+
+  // Compute hand end
+  let ex, ey;
+  if (tpMode === 'hour') {
+    const p = tpHourPos(tpHour); ex = p.x; ey = p.y;
+  } else {
+    const p = tpMinPos(tpMin); ex = p.x; ey = p.y;
+  }
+
+  // Build SVG
+  let nums = '';
+  if (tpMode === 'hour') {
+    for (let h = 0; h <= 23; h++) {
+      const { x, y } = tpHourPos(h);
+      const sel = h === tpHour;
+      nums += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17" fill="${sel?'#0C4A6E':'transparent'}"/>`;
+      nums += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${h>=13||h===0?'12':'14'}" fill="${sel?'white':'#374151'}" font-weight="${sel?'700':'400'}" style="pointer-events:none">${tpPad(h)}</text>`;
+    }
+  } else {
+    for (let i = 0; i < 12; i++) {
+      const m = i * 5;
+      const { x, y } = tpMinPos(m);
+      const sel = m === tpMin;
+      nums += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="17" fill="${sel?'#0C4A6E':'transparent'}"/>`;
+      nums += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="${sel?'white':'#374151'}" font-weight="${sel?'700':'400'}" style="pointer-events:none">${tpPad(m)}</text>`;
+    }
+  }
+
+  document.getElementById('tp-clock').innerHTML =
+    `<circle cx="140" cy="140" r="130" fill="#F1F5F9"/>` +
+    `<line x1="140" y1="140" x2="${ex.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#0C4A6E" stroke-width="2" stroke-linecap="round"/>` +
+    `<circle cx="140" cy="140" r="5" fill="#0C4A6E"/>` +
+    nums;
+  document.getElementById('tp-clock').onclick = tpClockClick;
+}
+
+function tpClockClick(e) {
+  const svg = document.getElementById('tp-clock');
+  const rect = svg.getBoundingClientRect();
+  const scale = 280 / rect.width;
+  const dx = (e.clientX - rect.left) * scale - TP_CX;
+  const dy = (e.clientY - rect.top)  * scale - TP_CY;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  let angle = Math.atan2(dy, dx) + Math.PI / 2;
+  if (angle < 0) angle += 2 * Math.PI;
+
+  if (tpMode === 'hour') {
+    const inner = dist < (TP_OR + TP_IR) / 2;
+    let norm = Math.round(angle / (2 * Math.PI) * 12) % 12; // 0-11
+    if (inner) {
+      tpHour = norm === 0 ? 0 : norm + 12; // 0→0, 1→13 … 11→23
+    } else {
+      tpHour = norm === 0 ? 12 : norm; // 0→12, 1→1 … 11→11
+    }
+    tpMode = 'min';
+  } else {
+    let norm = Math.round(angle / (2 * Math.PI) * 12) % 12;
+    tpMin = norm * 5;
+  }
+  tpRender();
+}
+
+function tpSwitchMode(mode) { tpMode = mode; tpRender(); }
+
 function openTimePicker() {
   const cur = document.getElementById('f-time').value;
   if (cur) { const [h,m] = cur.split(':'); tpHour = parseInt(h)||0; tpMin = parseInt(m)||0; }
-  tpRefresh();
+  else { tpHour = 8; tpMin = 0; }
+  tpMode = 'hour';
+  tpRender();
   document.getElementById('tp-overlay').classList.add('open');
 }
 function tpConfirm() {
@@ -861,13 +941,10 @@ function tpConfirm() {
   const btn = document.getElementById('f-time-btn');
   btn.textContent = val;
   btn.classList.remove('placeholder');
-  document.getElementById('tp-overlay').classList.remove('open');
+  tpClose();
 }
-function tpOverlayClick(e) {
-  if (e.target === document.getElementById('tp-overlay')) {
-    document.getElementById('tp-overlay').classList.remove('open');
-  }
-}
+function tpClose() { document.getElementById('tp-overlay').classList.remove('open'); }
+function tpOverlayClick(e) { if (e.target === document.getElementById('tp-overlay')) tpClose(); }
 
 function setDuration(d) {
   formDuration = d;
@@ -1337,25 +1414,19 @@ if ('serviceWorker' in navigator) {
 <!-- Time Picker -->
 <div class="tp-overlay" id="tp-overlay" onclick="tpOverlayClick(event)">
   <div class="tp-box">
-    <div class="tp-title">בחרי שעה</div>
-    <div class="tp-display" id="tp-display">08:00</div>
-    <div class="tp-cols">
-      <div class="tp-col">
-        <div class="tp-col-label">שעה</div>
-        <button class="tp-spin" onclick="tpAdjustHour(1)">▲</button>
-        <div class="tp-val" id="tp-h">08</div>
-        <button class="tp-spin" onclick="tpAdjustHour(-1)">▼</button>
-      </div>
-      <div style="font-size:36px;font-weight:700;color:#0C4A6E;align-self:center;padding-top:20px">:</div>
-      <div class="tp-col">
-        <div class="tp-col-label">דקות</div>
-        <button class="tp-spin" onclick="tpAdjustMin(5)">▲</button>
-        <div class="tp-val" id="tp-m">00</div>
-        <button class="tp-spin" onclick="tpAdjustMin(-5)">▼</button>
-      </div>
+    <div class="tp-disp-row">
+      <span class="tp-disp-part tp-active" id="tp-disp-h" onclick="tpSwitchMode('hour')">08</span>
+      <span class="tp-disp-sep">:</span>
+      <span class="tp-disp-part" id="tp-disp-m" onclick="tpSwitchMode('min')">00</span>
     </div>
-    <div class="tp-mins" id="tp-mins"></div>
-    <button class="tp-confirm" onclick="tpConfirm()">✔ אישור</button>
+    <div class="tp-clock-label" id="tp-clock-label">שעה</div>
+    <div class="tp-clock-wrap">
+      <svg id="tp-clock" class="tp-clock-svg" viewBox="0 0 280 280" width="270" height="270"></svg>
+    </div>
+    <div class="tp-btns">
+      <button class="tp-confirm" onclick="tpConfirm()">אישור</button>
+      <button class="tp-cancel" onclick="tpClose()">ביטול</button>
+    </div>
   </div>
 </div>
 </body>
