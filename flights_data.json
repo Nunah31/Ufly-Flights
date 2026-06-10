@@ -84,5 +84,23 @@
     "id": 6,
     "calEventId": "1e99hv3lm2njbj722f4bhbpilo",
     "termsReceived": true
+  },
+  {
+    "date": "2026-06-11",
+    "time": "08:30",
+    "contact": "יריב",
+    "phone": "⁦+972 52-811-3439⁩",
+    "duration": 40,
+    "count": 1,
+    "email": "אהרוניקו",
+    "notes": "",
+    "paymentMethod": null,
+    "source": "יריב",
+    "pilots": [],
+    "photo": false,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 7,
+    "calEventId": null
   }
 ]
