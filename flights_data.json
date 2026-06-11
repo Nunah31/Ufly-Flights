@@ -127,5 +127,23 @@
     "pilotDay": false,
     "id": 8,
     "calEventId": "2bc1tfdljbmodnfp8bgpi7en28"
+  },
+  {
+    "date": "2026-06-12",
+    "time": "18:30",
+    "contact": "אביב",
+    "phone": "+972 50-813-0315",
+    "duration": 20,
+    "count": 1,
+    "email": "",
+    "notes": "שובר טיסה",
+    "paymentMethod": null,
+    "source": "UFLY",
+    "pilots": [],
+    "photo": false,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 9,
+    "calEventId": null
   }
 ]
