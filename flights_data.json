@@ -109,5 +109,23 @@
     "id": 7,
     "calEventId": "d1d7elp1rgfnloaunon5jh7v7o",
     "termsReceived": false
+  },
+  {
+    "date": "2026-06-12",
+    "time": "18:00",
+    "contact": "איילת",
+    "phone": "+972 54-557-7192",
+    "duration": 20,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethod": null,
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 8,
+    "calEventId": null
   }
 ]
