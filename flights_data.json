@@ -135,7 +135,7 @@
     "phone": "+972 50-813-0315",
     "duration": 20,
     "count": 1,
-    "email": "",
+    "email": "avivsher98@gmail.com",
     "notes": "שובר טיסה",
     "paymentMethod": null,
     "source": "UFLY",
@@ -144,6 +144,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 9,
-    "calEventId": "o39iucch0h2h229jou59udr1uo"
+    "calEventId": "o39iucch0h2h229jou59udr1uo",
+    "termsReceived": true
   }
 ]
