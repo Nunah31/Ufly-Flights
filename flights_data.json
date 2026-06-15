@@ -174,5 +174,23 @@
     "pilotDay": false,
     "id": 10,
     "calEventId": null
+  },
+  {
+    "date": "2026-06-17",
+    "time": "19:00",
+    "contact": "מאיר זוהר",
+    "phone": "+972 58-412-8091",
+    "duration": 30,
+    "count": 1,
+    "email": "",
+    "notes": "יתרת תשלום 550",
+    "paymentMethod": "ביט",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 11,
+    "calEventId": null
   }
 ]
