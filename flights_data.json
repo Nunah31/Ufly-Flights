@@ -151,7 +151,9 @@
     "id": 9,
     "calEventId": "o39iucch0h2h229jou59udr1uo",
     "termsReceived": true,
-    "calNeedsTermsUpdate": false
+    "calNeedsTermsUpdate": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-15"
   },
   {
     "date": "2026-08-01",
