@@ -109,7 +109,9 @@
     "pilotDay": false,
     "id": 7,
     "calEventId": "d1d7elp1rgfnloaunon5jh7v7o",
-    "termsReceived": false
+    "termsReceived": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-15"
   },
   {
     "date": "2026-06-12",
