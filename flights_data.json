@@ -166,5 +166,23 @@
     "pilotDay": false,
     "id": 10,
     "calEventId": null
+  },
+  {
+    "date": "2026-06-15",
+    "time": "18:00",
+    "contact": "ניסיון",
+    "phone": "0523339795",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethod": "ביט",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 11,
+    "calEventId": null
   }
 ]
