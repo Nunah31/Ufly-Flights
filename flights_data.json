@@ -18,7 +18,8 @@
     "pilotDay": true,
     "id": 1,
     "calEventId": "nd5dml4etgtfsml38tiqfesmoo",
-    "termsReceived": true
+    "termsReceived": true,
+    "postponed": true
   },
   {
     "date": "2026-06-18",
@@ -145,7 +146,8 @@
     "pilotDay": false,
     "id": 9,
     "calEventId": "o39iucch0h2h229jou59udr1uo",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   },
   {
     "date": "2026-08-01",
