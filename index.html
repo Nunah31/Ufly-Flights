@@ -1302,11 +1302,12 @@ async function saveForm() {
 async function deleteFlight() {
   if (!confirm('למחוק את הטיסה?')) return;
   const f = flights.find(x => x.id === editId);
+  // Delete calendar event BEFORE closing modal so token popup can appear if needed
+  if (f && f.calEventId) await deleteCalendarEvent(f);
   flights = flights.filter(x => x.id !== editId);
   closeModal();
   render();
   saveFlights();
-  if (f && f.calEventId) await deleteCalendarEvent(f);
 }
 
 // ── Send to client ───────────────────────────────────────────────────────────
