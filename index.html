@@ -41,6 +41,7 @@
   .flight-card { background: white; border-radius: 12px; border: 2px solid transparent; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.12s; }
   .flight-card.selected { border-color: #0EA5E9; box-shadow: 0 0 0 4px rgba(14,165,233,0.08); }
   .flight-card.past { opacity: 0.65; }
+  .flight-card.postponed-card { border-color: #F97316; background: #FFF7ED; }
   .card-body { padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start; }
 
   .checkbox { width: 22px; height: 22px; border-radius: 5px; border: 2px solid #CBD5E1; background: white; flex-shrink: 0; margin-top: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
@@ -60,6 +61,7 @@
   .card-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
   .icon-btn { background: #F0F9FF; border: none; border-radius: 7px; padding: 6px 10px; cursor: pointer; font-size: 16px; line-height: 1; text-decoration: none; display: block; text-align: center; }
   .icon-btn:hover { background: #E0F2FE; }
+  .icon-btn.active { background: #FED7AA; }
   .cal-needs-update { background: #FEF9C3 !important; animation: pulse-yellow 1.5s infinite; }
   @keyframes pulse-yellow { 0%,100% { box-shadow: 0 0 0 0 rgba(234,179,8,0.5); } 50% { box-shadow: 0 0 0 5px rgba(234,179,8,0); } }
 
@@ -193,6 +195,7 @@
   <div class="filters" id="filters">
     <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
     <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
+    <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
     <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
   </div>
 
@@ -649,9 +652,28 @@ function includesLabel(f) {
 }
 
 function eventSummary(f) {
-  const countPrefix = (f.count > 1) ? `${f.count} טיסות · ` : '';
-  const sourcePrefix = (f.source && f.source !== 'UFLY') ? `${f.source} · ` : '';
-  return `${sourcePrefix}${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
+  const postponedPrefix = f.postponed ? 'נדחתה · ' : '';
+  const sourcePrefix    = (f.source && f.source !== 'UFLY') ? `${f.source} · ` : '';
+  const countPrefix     = (f.count > 1) ? `${f.count} טיסות · ` : '';
+  return `${postponedPrefix}${sourcePrefix}${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
+}
+
+async function togglePostpone(id) {
+  const idx = flights.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  flights[idx].postponed = !flights[idx].postponed;
+  saveFlights();
+  render();
+  // Update calendar event title if exists
+  if (flights[idx].calEventId) {
+    const indicator = document.getElementById('save-indicator');
+    indicator.textContent = '📅 מעדכן יומן...';
+    indicator.classList.add('visible');
+    const ok = await ensureGoogleToken();
+    if (ok) await syncCalendarEvent(flights[idx]);
+    setTimeout(() => indicator.classList.remove('visible'), 2000);
+    render();
+  }
 }
 
 function buildCalEvent(f) {
@@ -783,8 +805,9 @@ function fmtDate(d) { if(!d) return ''; const [y,m,day]=d.split('-'); return `${
 function getFiltered() {
   const today = new Date().toISOString().slice(0,10);
   let list = [...flights].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
-  if (currentFilter==='future')    return list.filter(f => f.date >= today);
-  if (currentFilter==='past')      return list.filter(f => f.date < today);
+  if (currentFilter==='future')    return list.filter(f => !f.postponed && f.date >= today);
+  if (currentFilter==='past')      return list.filter(f => !f.postponed && f.date < today);
+  if (currentFilter==='postponed') return list.filter(f => f.postponed);
   return list;
 }
 
@@ -813,7 +836,7 @@ function render() {
     const optsStr = includesLabel(f);
     const isSel = selected.has(f.id);
     return `
-    <div class="flight-card${isPast?' past':''}${isSel?' selected':''}">
+    <div class="flight-card${isPast?' past':''}${isSel?' selected':''}${f.postponed?' postponed-card':''}">
       <div class="card-body">
         <div class="checkbox${isSel?' checked':''}" onclick="toggleSel(${f.id})"></div>
         <div class="card-content" onclick="toggleSel(${f.id})">
@@ -829,13 +852,15 @@ function render() {
           ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
           ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
           ${f.paymentMethod ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethod}</div>` : ''}
+          ${f.postponed?`<div class="card-notes" style="color:#EA580C;font-weight:700">🌧️ נדחתה</div>`:''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
         <div class="card-actions">
           <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
           <button class="icon-btn${f.calNeedsTermsUpdate?' cal-needs-update':''}" onclick="handleCalClick(${f.id})" title="${f.calNeedsTermsUpdate?'עדכן יומן — התקבל אישור תנאים':f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calNeedsTermsUpdate?'📅⚡':f.calEventId?'📅✅':'📅'}</button>
           <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
-          <button class="icon-btn" onclick="openPostpone(${f.id})" title="דחיית טיסה עקב מזג אוויר">🌧️</button>
+          <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'🌧️✓':'🌧️'}</button>
+          <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה">📨</button>
         </div>
       </div>
     </div>`;
