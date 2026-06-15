@@ -308,6 +308,7 @@
 <!-- Save indicator already defined above -->
 
 <script>
+const FLIGHT_LOG_URL = 'https://script.google.com/macros/s/AKfycbzZ065m8442-KmY7xS-XaCbyN_FLMOvFrMHQf4QNyOJePQ_idY7u7BpIXw8XnFnv9ld/exec';
 const STORAGE_KEY = 'ufly_flights_data';
 const SETTINGS_KEY = 'ufly_flights_settings';
 
@@ -658,6 +659,48 @@ function eventSummary(f) {
   return `${postponedPrefix}${sourcePrefix}${countPrefix}טיסה · ${f.duration} דק׳ · ${includesLabel(f)}`;
 }
 
+// ── Flight log diary integration ──────────────────────────────────────────────
+async function logFlightToDiary(id) {
+  const idx = flights.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  const f = flights[idx];
+  if (f.loggedToDiary) {
+    if (!confirm('טיסה זו כבר סומנה כבוצעה. לשלוח שוב ליומן?')) return;
+  }
+
+  const indicator = document.getElementById('save-indicator');
+  indicator.textContent = '✈️ שולח ליומן טיסות...';
+  indicator.classList.add('visible');
+
+  const count = f.count && f.count > 1 ? f.count : 1;
+  const record = {
+    'תאריך':      f.date,
+    'מקום המראה': 'עין ורד',
+    'שעת המראה':  f.time || '',
+    'זמן טיסה':   `${f.duration} דקות`,
+    'סוג טיסה':   'מסחרית',
+    'הערות':      count > 1 ? `${count} טיסות` : '',
+  };
+
+  try {
+    // Send one row per flight (count times)
+    for (let i = 0; i < count; i++) {
+      await fetch(FLIGHT_LOG_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'append', row: record }),
+      });
+    }
+    flights[idx].loggedToDiary = true;
+    flights[idx].loggedDate = new Date().toISOString().slice(0, 10);
+    saveFlights();
+    render();
+    indicator.textContent = `✅ נשלח ליומן! (${count} טיסה${count > 1 ? 'ות' : ''})`;
+  } catch(e) {
+    indicator.textContent = '⚠️ שגיאה בשליחה ליומן';
+  }
+  setTimeout(() => indicator.classList.remove('visible'), 3000);
+}
+
 async function togglePostpone(id) {
   const idx = flights.findIndex(x => x.id === id);
   if (idx < 0) return;
@@ -853,6 +896,7 @@ function render() {
           ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
           ${f.paymentMethod ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethod}</div>` : ''}
           ${f.postponed?`<div class="card-notes" style="color:#EA580C;font-weight:700">🌧️ נדחתה</div>`:''}
+          ${f.loggedToDiary?`<div class="card-notes" style="color:#065F46;font-weight:600">✅ בוצעה${f.loggedDate?' · '+fmtDate(f.loggedDate):''}</div>`:''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
         <div class="card-actions">
@@ -861,6 +905,7 @@ function render() {
           <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
           <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'🌧️✓':'🌧️'}</button>
           <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה">📨</button>
+          <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
         </div>
       </div>
     </div>`;
