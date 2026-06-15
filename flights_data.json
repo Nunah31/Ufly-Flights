@@ -183,6 +183,7 @@
     "photo360": true,
     "pilotDay": false,
     "id": 11,
-    "calEventId": "0rmtirosrli5vqqa9a5s15jmh0"
+    "calEventId": "0rmtirosrli5vqqa9a5s15jmh0",
+    "postponed": true
   }
 ]
