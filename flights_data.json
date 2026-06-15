@@ -184,6 +184,8 @@
     "pilotDay": false,
     "id": 11,
     "calEventId": "0rmtirosrli5vqqa9a5s15jmh0",
-    "postponed": false
+    "postponed": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-15"
   }
 ]
