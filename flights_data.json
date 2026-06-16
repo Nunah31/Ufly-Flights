@@ -192,5 +192,23 @@
     "pilotDay": false,
     "id": 11,
     "calEventId": "ph1oj6ekk1m3br4equa2vipqr0"
+  },
+  {
+    "date": "2026-06-17",
+    "time": "08:00",
+    "contact": "תומר לביא",
+    "phone": "‎+972543298747",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "יתרת תשלום 100 שח",
+    "paymentMethod": "פייבוקס",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 12,
+    "calEventId": null
   }
 ]
