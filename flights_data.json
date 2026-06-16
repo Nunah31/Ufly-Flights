@@ -200,7 +200,7 @@
     "phone": "+972 54-359-8686",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "Tomerla@shufersal.co.il",
     "notes": "יתרת תשלום 100 שח",
     "paymentMethod": "פייבוקס",
     "source": "UFLY",
@@ -210,6 +210,6 @@
     "pilotDay": false,
     "id": 12,
     "calEventId": "vup2a27r8v6ugcivkng3sv7frs",
-    "termsReceived": false
+    "termsReceived": true
   }
 ]
