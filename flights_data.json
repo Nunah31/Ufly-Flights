@@ -253,5 +253,23 @@
     "pilotDay": false,
     "id": 14,
     "calEventId": "kmsanj5et8h9qa9ef5n09jb69o"
+  },
+  {
+    "date": "2026-06-17",
+    "time": "14:00",
+    "contact": "ניסניס",
+    "phone": "0522457457",
+    "duration": 10,
+    "count": 3,
+    "email": "",
+    "notes": "",
+    "paymentMethod": "ביט",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 15,
+    "calEventId": null
   }
 ]
