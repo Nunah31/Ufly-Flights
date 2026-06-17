@@ -220,7 +220,7 @@
     "phone": "+972 54-227-3094",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "yaelkomari@gmail.com",
     "notes": "40 דק טיסה ועוד 3 טיסות של 10 דק כולל צילום",
     "paymentMethod": "פייבוקס",
     "source": "UFLY",
@@ -229,6 +229,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 13,
-    "calEventId": "lflop042u6l8ncqeq8uf11leh0"
+    "calEventId": "lflop042u6l8ncqeq8uf11leh0",
+    "termsReceived": true
   }
 ]
