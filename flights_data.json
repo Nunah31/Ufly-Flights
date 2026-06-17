@@ -211,5 +211,23 @@
     "id": 12,
     "calEventId": "vup2a27r8v6ugcivkng3sv7frs",
     "termsReceived": true
+  },
+  {
+    "date": "2026-06-26",
+    "time": "18:00",
+    "contact": "יעל כומארי",
+    "phone": "+972 54-227-3094",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "40 דק טיסה ועוד 3 טיסות של 10 דק כולל צילום",
+    "paymentMethod": "פייבוקס",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 13,
+    "calEventId": null
   }
 ]
