@@ -240,11 +240,12 @@
       </div>
 
       <div class="field form-full"><label>זמן טיסה (דקות)</label>
-        <div class="toggle-row" id="duration-row">
-          <button class="toggle-opt" data-d="20" onclick="setDuration(20)">20</button>
-          <button class="toggle-opt" data-d="30" onclick="setDuration(30)">30</button>
-          <button class="toggle-opt" data-d="40" onclick="setDuration(40)">40</button>
-          <button class="toggle-opt" data-d="60" onclick="setDuration(60)">60</button>
+        <div class="toggle-row" id="duration-row" style="flex-wrap:nowrap">
+          <button class="toggle-opt" data-d="10" onclick="setDuration(10)" style="min-width:0">10</button>
+          <button class="toggle-opt" data-d="20" onclick="setDuration(20)" style="min-width:0">20</button>
+          <button class="toggle-opt" data-d="30" onclick="setDuration(30)" style="min-width:0">30</button>
+          <button class="toggle-opt" data-d="40" onclick="setDuration(40)" style="min-width:0">40</button>
+          <button class="toggle-opt" data-d="60" onclick="setDuration(60)" style="min-width:0">60</button>
         </div>
       </div>
 
@@ -343,18 +344,13 @@ function isTokenValid() {
   return !!(gAccessToken && Date.now() < gTokenExpiry);
 }
 
-// Ensure a valid token before any calendar operation.
-// Tries silent refresh first; only shows popup if that fails.
+// Ensure a valid token — silent only, NEVER shows a popup automatically.
+// If silent fails, returns false and the caller shows a friendly message.
 async function ensureGoogleToken() {
   if (isTokenValid()) return true;
   if (!window.google) return false;
   if (!tokenClient) initGoogleAuth();
-  // Try silent first
-  const silent = await tryAutoConnectGoogle();
-  if (silent) return true;
-  // Fall back to interactive login
-  await connectGoogleAsync();
-  return isTokenValid();
+  return await tryAutoConnectGoogle();
 }
 
 const OPTIONS_CFG = [
@@ -581,8 +577,19 @@ function initGoogleAuth() {
   });
 }
 function connectGoogle() {
+  // Only place that opens an interactive popup — user clicked explicitly
   if (!tokenClient) initGoogleAuth();
-  if (tokenClient) tokenClient.requestAccessToken();
+  if (!tokenClient) return;
+  const prev = tokenClient.callback;
+  tokenClient.callback = (resp) => {
+    tokenClient.callback = prev;
+    if (resp.access_token) {
+      setGoogleToken(resp.access_token);
+      flushPendingCalTermsSync();
+      updateCalendarStatus();
+    }
+  };
+  tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 function connectGoogleAsync() {
   return new Promise((resolve) => {
@@ -782,6 +789,7 @@ async function syncCalendarEvent(f) {
 
 async function deleteCalendarEvent(f) {
   if (!f || !f.calEventId) return;
+  // Try silent token only — no popup during delete
   if (!await ensureGoogleToken()) return;
   try {
     await fetch(
@@ -799,25 +807,30 @@ async function handleCalClick(id) {
   const indicator = document.getElementById('save-indicator');
 
   if (window.google) {
-    indicator.textContent = '🔄 בודק חיבור לגוגל...';
-    indicator.classList.add('visible');
     const ok = await ensureGoogleToken();
     if (ok) {
       indicator.textContent = '📅 מסנכרן ליומן...';
+      indicator.classList.add('visible');
       const hadEvent = !!f.calEventId;
       const result = await syncCalendarEvent(f);
-      indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה בסנכרון יומן';
-      setTimeout(() => indicator.classList.remove('visible'), 2500);
+      indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה — פתחי הגדרות והתחברי מחדש לגוגל';
+      setTimeout(() => indicator.classList.remove('visible'), 3000);
       render();
       return;
     }
-    indicator.classList.remove('visible');
+    // Silent failed — ask user to connect manually, never auto-popup
+    if (f.calEventId) {
+      indicator.textContent = '⚠️ יש להתחבר ליומן גוגל בהגדרות (⚙️)';
+      indicator.classList.add('visible');
+      setTimeout(() => indicator.classList.remove('visible'), 4000);
+      return;
+    }
   }
 
   if (!f.calEventId) {
     window.open(buildCalUrl(f), '_blank');
   } else {
-    alert('כדי לעדכן את האירוע הקיים ביומן יש להתחבר לחשבון Google. התחברי ליומן גוגל בהגדרות (⚙️) ונסי שוב — כך נמנע יצירת אירוע כפול.');
+    alert('יש להתחבר ליומן גוגל בהגדרות (⚙️) — כך נמנע יצירת אירוע כפול.');
   }
 }
 
