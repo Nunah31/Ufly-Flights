@@ -344,13 +344,18 @@ function isTokenValid() {
   return !!(gAccessToken && Date.now() < gTokenExpiry);
 }
 
-// Ensure a valid token — silent only, NEVER shows a popup automatically.
-// If silent fails, returns false and the caller shows a friendly message.
-async function ensureGoogleToken() {
+// Ensure a valid token.
+// interactive=true → try silent first, then popup if needed (user-initiated actions)
+// interactive=false → silent only, never popup (background/startup)
+async function ensureGoogleToken(interactive = false) {
   if (isTokenValid()) return true;
   if (!window.google) return false;
   if (!tokenClient) initGoogleAuth();
-  return await tryAutoConnectGoogle();
+  const silent = await tryAutoConnectGoogle();
+  if (silent) return true;
+  if (!interactive) return false;
+  // Silent failed + user initiated → show popup
+  return await connectGoogleAsync();
 }
 
 const OPTIONS_CFG = [
@@ -807,18 +812,27 @@ async function handleCalClick(id) {
   const indicator = document.getElementById('save-indicator');
 
   if (window.google) {
-    const ok = await ensureGoogleToken();
+    // interactive=true: user clicked 📅, allow popup if silent fails (needed on mobile)
+    const ok = await ensureGoogleToken(true);
     if (ok) {
       indicator.textContent = '📅 מסנכרן ליומן...';
       indicator.classList.add('visible');
       const hadEvent = !!f.calEventId;
       const result = await syncCalendarEvent(f);
-      indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה — פתחי הגדרות והתחברי מחדש לגוגל';
+      indicator.textContent = (result && result !== 'auth_expired') ? (hadEvent ? '📅 יומן עודכן!' : '📅 נוסף ליומן!') : '⚠️ שגיאה — נסי שוב';
       setTimeout(() => indicator.classList.remove('visible'), 3000);
       render();
       return;
     }
-    // Silent failed — ask user to connect manually, never auto-popup
+    // Token failed even with interactive — show message
+    if (f.calEventId) {
+      indicator.textContent = '⚠️ יש להתחבר ליומן גוגל בהגדרות (⚙️)';
+      indicator.classList.add('visible');
+      setTimeout(() => indicator.classList.remove('visible'), 4000);
+      return;
+    }
+  } else {
+    // Google script not loaded — show message on mobile
     if (f.calEventId) {
       indicator.textContent = '⚠️ יש להתחבר ליומן גוגל בהגדרות (⚙️)';
       indicator.classList.add('visible');
