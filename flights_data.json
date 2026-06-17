@@ -262,7 +262,7 @@
     "phone": "0536064923",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "haimbenaroya@gmail.com",
     "notes": "אור לבן רכש עבורו את שובר הטיסה VNLL-AD4P-RXDX-JAEA",
     "paymentMethod": null,
     "source": "UFLY",
@@ -271,6 +271,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 15,
-    "calEventId": "klrnpv5tp4n7f3ss1ke85o7dlk"
+    "calEventId": "klrnpv5tp4n7f3ss1ke85o7dlk",
+    "termsReceived": true
   }
 ]
