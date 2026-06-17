@@ -253,23 +253,5 @@
     "pilotDay": false,
     "id": 14,
     "calEventId": "kmsanj5et8h9qa9ef5n09jb69o"
-  },
-  {
-    "date": "2026-06-17",
-    "time": "17:00",
-    "contact": "באבי",
-    "phone": "0522511159",
-    "duration": 40,
-    "count": 6,
-    "email": "",
-    "notes": "",
-    "paymentMethod": "פייבוקס",
-    "source": "UFLY",
-    "pilots": [],
-    "photo": false,
-    "photo360": true,
-    "pilotDay": false,
-    "id": 16,
-    "calEventId": "hn4e7to3ft2qhcomu0kctasq6c"
   }
 ]
