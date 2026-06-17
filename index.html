@@ -813,8 +813,8 @@ async function syncCalendarEvent(f) {
 
 async function deleteCalendarEvent(f) {
   if (!f || !f.calEventId) return;
-  // Try silent token only — no popup during delete
-  if (!await ensureGoogleToken()) return;
+  // interactive=true: user triggered delete, allow popup if token expired
+  if (!await ensureGoogleToken(true)) return;
   try {
     await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/primary/events/${f.calEventId}`,
