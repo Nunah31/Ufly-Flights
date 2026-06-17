@@ -184,7 +184,7 @@
     "phone": "+972 58-412-8091",
     "duration": 30,
     "count": 1,
-    "email": "",
+    "email": "meirzohar6@gmail.com",
     "notes": "יתרת תשלום 550",
     "paymentMethod": "ביט",
     "source": "UFLY",
@@ -193,7 +193,8 @@
     "photo360": false,
     "pilotDay": false,
     "id": 11,
-    "calEventId": "ph1oj6ekk1m3br4equa2vipqr0"
+    "calEventId": "ph1oj6ekk1m3br4equa2vipqr0",
+    "termsReceived": true
   },
   {
     "date": "2026-06-17",
