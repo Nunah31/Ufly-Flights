@@ -210,7 +210,8 @@
     "pilotDay": false,
     "id": 12,
     "calEventId": "vup2a27r8v6ugcivkng3sv7frs",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   },
   {
     "date": "2026-06-26",
@@ -228,6 +229,6 @@
     "photo360": false,
     "pilotDay": false,
     "id": 13,
-    "calEventId": null
+    "calEventId": "lflop042u6l8ncqeq8uf11leh0"
   }
 ]
