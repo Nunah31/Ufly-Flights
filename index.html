@@ -322,58 +322,68 @@ let settingsSha = null;
 
 const GOOGLE_CLIENT_ID = '445601042786-j4f64beftudtg0nlcdg1kuqp0k08amqo.apps.googleusercontent.com';
 const CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
-let gAccessToken  = null;
-let gTokenExpiry  = 0;       // timestamp (ms) when token expires
-let gRefreshTimer = null;    // proactive silent-refresh timer
-let tokenClient   = null;
+let gAccessToken = null;
+let gTokenTimer  = null;
+let tokenClient  = null;
 let pendingCalTermsSync = [];
 
-function setGoogleToken(token) {
-  gAccessToken = token;
-  gTokenExpiry  = Date.now() + 55 * 60 * 1000;
-  try {
-    sessionStorage.setItem('g_tok', token);
-    sessionStorage.setItem('g_exp', String(gTokenExpiry));
-  } catch(e) {}
-  updateCalendarStatus();
-  render();
-  if (gRefreshTimer) clearTimeout(gRefreshTimer);
-  gRefreshTimer = setTimeout(() => {
-    if (tokenClient) tryAutoConnectGoogle();
-  }, 54 * 60 * 1000);
+function onGoogleToken(resp) {
+  if (resp.access_token) {
+    gAccessToken = resp.access_token;
+    const expiresIn = resp.expires_in || 3600;
+    localStorage.setItem('gcal_token', JSON.stringify({
+      token: resp.access_token,
+      expires: Date.now() + expiresIn * 1000
+    }));
+    localStorage.setItem('gcal_connected', '1');
+    updateCalendarStatus();
+    render();
+    flushPendingCalTermsSync();
+    if (gTokenTimer) clearTimeout(gTokenTimer);
+    gTokenTimer = setTimeout(() => silentGoogleRefresh(), (expiresIn - 300) * 1000);
+  }
 }
 
-function restoreTokenFromSession() {
+function restoreGoogleToken() {
+  const saved = localStorage.getItem('gcal_token');
+  if (!saved) return;
   try {
-    const tok = sessionStorage.getItem('g_tok');
-    const exp = parseInt(sessionStorage.getItem('g_exp') || '0');
-    if (tok && exp > Date.now() + 30000) {
-      gAccessToken = tok;
-      gTokenExpiry = exp;
-      return true;
+    const { token, expires } = JSON.parse(saved);
+    if (token && expires && Date.now() < expires - 60000) {
+      gAccessToken = token;
+      updateCalendarStatus();
+      const msLeft = expires - Date.now() - 300000;
+      if (gTokenTimer) clearTimeout(gTokenTimer);
+      gTokenTimer = setTimeout(() => silentGoogleRefresh(), Math.max(msLeft, 10000));
+    } else {
+      localStorage.removeItem('gcal_token');
+      if (localStorage.getItem('gcal_connected') === '1') silentGoogleRefresh();
     }
-  } catch(e) {}
-  return false;
+  } catch(e) { localStorage.removeItem('gcal_token'); }
 }
 
-function isTokenValid() {
-  return !!(gAccessToken && Date.now() < gTokenExpiry);
+function silentGoogleRefresh() {
+  if (!tokenClient) return;
+  try { tokenClient.requestAccessToken({ prompt: '' }); } catch(e) {}
 }
 
-// Ensure a valid token.
-// interactive=true → try silent first, then popup if needed (user-initiated actions)
-// interactive=false → silent only, never popup (background/startup)
+function isTokenValid() { return !!gAccessToken; }
+
+// interactive=true → allow popup if no token (user-initiated)
+// interactive=false → silent only
 async function ensureGoogleToken(interactive = false) {
   if (isTokenValid()) return true;
-  // Try to restore from sessionStorage (survives mobile backgrounding)
-  if (restoreTokenFromSession()) { updateCalendarStatus(); return true; }
-  if (!window.google) return false;
-  if (!tokenClient) initGoogleAuth();
-  const silent = await tryAutoConnectGoogle();
-  if (silent) return true;
-  if (!interactive) return false;
-  // Silent failed + user initiated → show popup
-  return await connectGoogleAsync();
+  if (interactive && tokenClient) {
+    return new Promise((resolve) => {
+      const orig = tokenClient.callback;
+      tokenClient.callback = (resp) => {
+        tokenClient.callback = orig;
+        resolve(!!resp.access_token);
+      };
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
+    });
+  }
+  return false;
 }
 
 const OPTIONS_CFG = [
@@ -590,72 +600,15 @@ function initGoogleAuth() {
   tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: CALENDAR_SCOPE,
-    prompt: 'select_account',
-    callback: (resp) => {
-      if (resp.access_token) {
-        setGoogleToken(resp.access_token);
-        flushPendingCalTermsSync();
-      }
-    }
+    prompt: '',
+    callback: onGoogleToken,
   });
+  restoreGoogleToken();
 }
+
 function connectGoogle() {
-  // Only place that opens an interactive popup — user clicked explicitly
   if (!tokenClient) initGoogleAuth();
-  if (!tokenClient) return;
-  const prev = tokenClient.callback;
-  tokenClient.callback = (resp) => {
-    tokenClient.callback = prev;
-    if (resp.access_token) {
-      setGoogleToken(resp.access_token);
-      flushPendingCalTermsSync();
-      updateCalendarStatus();
-    }
-  };
-  tokenClient.requestAccessToken({ prompt: 'select_account' });
-}
-function connectGoogleAsync() {
-  return new Promise((resolve) => {
-    if (!tokenClient) initGoogleAuth();
-    if (!tokenClient) { resolve(false); return; }
-    const originalCallback = tokenClient.callback;
-    tokenClient.callback = (resp) => {
-      tokenClient.callback = originalCallback;
-      if (resp.access_token) {
-        setGoogleToken(resp.access_token);
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    };
-    tokenClient.requestAccessToken();
-  });
-}
-async function tryAutoConnectGoogle() {
-  if (!window.google) return false;
-  if (!tokenClient) initGoogleAuth();
-  if (!tokenClient) return false;
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(false), 5000); // timeout: 5s
-    const prev = tokenClient.callback;
-    tokenClient.callback = (resp) => {
-      clearTimeout(timer);
-      tokenClient.callback = prev;
-      if (resp.access_token) {
-        setGoogleToken(resp.access_token);
-        flushPendingCalTermsSync();
-        resolve(true);
-      } else {
-        pendingCalTermsSync.forEach(id => {
-          const f = flights.find(x => x.id === id);
-          if (f) f.calNeedsTermsUpdate = true;
-        });
-        render();
-        resolve(false);
-      }
-    };
-    tokenClient.requestAccessToken({ prompt: 'none' });
-  });
+  if (tokenClient) tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 
 async function flushPendingCalTermsSync() {
@@ -790,7 +743,7 @@ async function syncCalendarEvent(f) {
         { method: 'PUT', headers: { 'Authorization': `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify(event) }
       );
       if (r.ok) { const d = await r.json(); return d.id; }
-      if (r.status === 401) { gAccessToken = null; gTokenExpiry = 0; updateCalendarStatus(); return 'auth_expired'; }
+      if (r.status === 401) { gAccessToken = null; localStorage.removeItem('gcal_token'); updateCalendarStatus(); return 'auth_expired'; }
       if (r.status !== 404 && r.status !== 410) return null;
       if (idx >= 0) flights[idx].calEventId = null;
     } catch(e) { return null; }
@@ -1588,16 +1541,10 @@ async function init() {
     loadFlights();
     if (migrateSettings()) {} // local-only: already saved to localStorage inside migrateSettings
   }
-  // Restore token from sessionStorage immediately (mobile backgrounding survival)
-  if (restoreTokenFromSession()) updateCalendarStatus();
   render();
-  // Init Google and always attempt silent reconnect on load
-  const doGoogleInit = () => {
-    initGoogleAuth();
-    if (!isTokenValid()) tryAutoConnectGoogle();
-  };
-  if (window.google) doGoogleInit();
-  else window.addEventListener('load', () => { if (window.google) doGoogleInit(); });
+  // Init Google — restoreGoogleToken() is called inside initGoogleAuth()
+  if (window.google) initGoogleAuth();
+  else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
 }
 function saveToken() {
   const t = document.getElementById('token-input').value.trim();
