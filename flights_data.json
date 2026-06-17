@@ -289,23 +289,5 @@
     "pilotDay": false,
     "id": 16,
     "calEventId": "q2s6o42o5jqe52jo19nho353qc"
-  },
-  {
-    "date": "2026-06-17",
-    "time": "15:00",
-    "contact": "גיגי",
-    "phone": "0522457457",
-    "duration": 10,
-    "count": 4,
-    "email": "",
-    "notes": "",
-    "paymentMethod": "מזומן",
-    "source": "UFLY",
-    "pilots": [],
-    "photo": false,
-    "photo360": true,
-    "pilotDay": false,
-    "id": 18,
-    "calEventId": "ocq625aangva5904pm0bk0kip0"
   }
 ]
