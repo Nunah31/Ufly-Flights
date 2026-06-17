@@ -19,7 +19,9 @@
     "id": 1,
     "calEventId": "nd5dml4etgtfsml38tiqfesmoo",
     "termsReceived": true,
-    "postponed": false
+    "postponed": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-17"
   },
   {
     "date": "2026-06-18",
