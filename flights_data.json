@@ -253,5 +253,23 @@
     "pilotDay": false,
     "id": 14,
     "calEventId": "kmsanj5et8h9qa9ef5n09jb69o"
+  },
+  {
+    "date": "2026-06-19",
+    "time": "18:00",
+    "contact": "חיים בן ארויה",
+    "phone": "0536064923",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "אור לבן רכש עבורו את שובר הטיסה VNLL-AD4P-RXDX-JAEA",
+    "paymentMethod": null,
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 15,
+    "calEventId": null
   }
 ]
