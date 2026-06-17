@@ -25,7 +25,7 @@
   },
   {
     "date": "2026-06-18",
-    "time": "18:00",
+    "time": "18:45",
     "contact": "אברהם פרנס",
     "phone": "0504004833",
     "duration": 30,
@@ -194,7 +194,8 @@
     "pilotDay": false,
     "id": 11,
     "calEventId": "ph1oj6ekk1m3br4equa2vipqr0",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   },
   {
     "date": "2026-06-17",
@@ -272,6 +273,7 @@
     "pilotDay": false,
     "id": 15,
     "calEventId": "klrnpv5tp4n7f3ss1ke85o7dlk",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   }
 ]
