@@ -306,7 +306,8 @@
     "photo360": false,
     "pilotDay": false,
     "id": 17,
-    "calEventId": "npbr506dvfu9r67po8mto9h29g"
+    "calEventId": "npbr506dvfu9r67po8mto9h29g",
+    "termsReceived": false
   },
   {
     "date": "2026-06-17",
