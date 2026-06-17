@@ -330,14 +330,30 @@ let pendingCalTermsSync = [];
 
 function setGoogleToken(token) {
   gAccessToken = token;
-  gTokenExpiry  = Date.now() + 55 * 60 * 1000; // 55 min (tokens last 60 min)
+  gTokenExpiry  = Date.now() + 55 * 60 * 1000;
+  try {
+    sessionStorage.setItem('g_tok', token);
+    sessionStorage.setItem('g_exp', String(gTokenExpiry));
+  } catch(e) {}
   updateCalendarStatus();
   render();
-  // Proactive refresh at 54 minutes — before the token actually expires
   if (gRefreshTimer) clearTimeout(gRefreshTimer);
   gRefreshTimer = setTimeout(() => {
     if (tokenClient) tryAutoConnectGoogle();
   }, 54 * 60 * 1000);
+}
+
+function restoreTokenFromSession() {
+  try {
+    const tok = sessionStorage.getItem('g_tok');
+    const exp = parseInt(sessionStorage.getItem('g_exp') || '0');
+    if (tok && exp > Date.now() + 30000) {
+      gAccessToken = tok;
+      gTokenExpiry = exp;
+      return true;
+    }
+  } catch(e) {}
+  return false;
 }
 
 function isTokenValid() {
@@ -349,6 +365,8 @@ function isTokenValid() {
 // interactive=false → silent only, never popup (background/startup)
 async function ensureGoogleToken(interactive = false) {
   if (isTokenValid()) return true;
+  // Try to restore from sessionStorage (survives mobile backgrounding)
+  if (restoreTokenFromSession()) { updateCalendarStatus(); return true; }
   if (!window.google) return false;
   if (!tokenClient) initGoogleAuth();
   const silent = await tryAutoConnectGoogle();
@@ -618,15 +636,16 @@ async function tryAutoConnectGoogle() {
   if (!tokenClient) initGoogleAuth();
   if (!tokenClient) return false;
   return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(false), 5000); // timeout: 5s
     const prev = tokenClient.callback;
     tokenClient.callback = (resp) => {
+      clearTimeout(timer);
       tokenClient.callback = prev;
       if (resp.access_token) {
         setGoogleToken(resp.access_token);
         flushPendingCalTermsSync();
         resolve(true);
       } else {
-        // mark flights needing cal update so button glows
         pendingCalTermsSync.forEach(id => {
           const f = flights.find(x => x.id === id);
           if (f) f.calNeedsTermsUpdate = true;
@@ -1569,12 +1588,13 @@ async function init() {
     loadFlights();
     if (migrateSettings()) {} // local-only: already saved to localStorage inside migrateSettings
   }
+  // Restore token from sessionStorage immediately (mobile backgrounding survival)
+  if (restoreTokenFromSession()) updateCalendarStatus();
   render();
   // Init Google and always attempt silent reconnect on load
   const doGoogleInit = () => {
     initGoogleAuth();
-    // Always try silent reconnect on startup — no popup, just restores the token quietly
-    tryAutoConnectGoogle();
+    if (!isTokenValid()) tryAutoConnectGoogle();
   };
   if (window.google) doGoogleInit();
   else window.addEventListener('load', () => { if (window.google) doGoogleInit(); });
