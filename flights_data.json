@@ -42,7 +42,9 @@
     "pilotDay": false,
     "id": 2,
     "calEventId": "gff25696ghourga5k4o66ue18o",
-    "termsReceived": false
+    "termsReceived": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-18"
   },
   {
     "date": "2026-06-19",
@@ -295,6 +297,7 @@
     "pilotDay": false,
     "id": 16,
     "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   }
 ]
