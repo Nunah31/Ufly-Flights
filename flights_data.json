@@ -281,7 +281,7 @@
   {
     "date": "2026-06-24",
     "time": "18:00",
-    "contact": "ענבר ששון",
+    "contact": "ענבר שושן",
     "phone": "+972 54-932-2948",
     "duration": 40,
     "count": 1,
@@ -294,6 +294,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 16,
-    "calEventId": "0hqk8i1imc2e5fg4fpu639i49k"
+    "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
+    "termsReceived": false
   }
 ]
