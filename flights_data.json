@@ -285,7 +285,7 @@
     "phone": "+972 54-932-2948",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "inbarshu12@gmail.com",
     "notes": "",
     "paymentMethod": "ביט",
     "source": "UFLY",
@@ -295,6 +295,6 @@
     "pilotDay": false,
     "id": 16,
     "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
-    "termsReceived": false
+    "termsReceived": true
   }
 ]
