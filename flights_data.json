@@ -59,7 +59,9 @@
     "photo360": false,
     "pilotDay": false,
     "id": 3,
-    "calEventId": "mhduun0l0v60gp0old2vuspdms"
+    "calEventId": "mhduun0l0v60gp0old2vuspdms",
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-19"
   },
   {
     "date": "2026-07-17",
