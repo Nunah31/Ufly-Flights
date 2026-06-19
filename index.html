@@ -197,6 +197,7 @@
     <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
     <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
     <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
+    <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
   </div>
 
   <!-- Toolbar -->
@@ -286,6 +287,11 @@
           <button class="toggle-opt" data-p="העברה בנקאית" onclick="setPayment('העברה בנקאית')">העברה בנקאית</button>
           <button class="toggle-opt" data-p="מזומן" onclick="setPayment('מזומן')">מזומן</button>
         </div>
+      </div>
+
+      <div class="field"><label>📅 תאריך ביצוע תשלום</label>
+        <button type="button" class="time-btn placeholder" id="f-paydate-btn" onclick="triggerDatePicker('f-paydate')">בחר תאריך</button>
+        <input type="date" id="f-paydate" style="position:absolute;opacity:0;width:1px;height:1px;top:36px;right:0;pointer-events:none" onchange="onDateChange(this.value,'f-paydate-btn')">
       </div>
 
       <div class="field form-full"><label>הערות</label><textarea id="f-notes" rows="3" placeholder="הערות חופשיות..."></textarea></div>
@@ -657,7 +663,9 @@ async function logFlightToDiary(id) {
   indicator.textContent = '✈️ שולח ליומן טיסות...';
   indicator.classList.add('visible');
 
-  const count = f.count && f.count > 1 ? f.count : 1;
+  // If multiple pilots are assigned, each pilot flies one flight — log only 1 row.
+  // Otherwise (UFLY-only / single pilot) log one row per flight in the count.
+  const count = (f.pilots && f.pilots.length > 1) ? 1 : (f.count && f.count > 1 ? f.count : 1);
   const record = {
     'תאריך':      f.date,
     'מקום המראה': 'עין ורד',
@@ -851,6 +859,7 @@ function getFiltered() {
   if (currentFilter==='future')    return list.filter(f => !f.postponed && f.date >= today);
   if (currentFilter==='past')      return list.filter(f => !f.postponed && f.date < today);
   if (currentFilter==='postponed') return list.filter(f => f.postponed);
+  if (currentFilter==='paydate')   return list.sort((a,b) => (b.paymentDate||b.date).localeCompare(a.paymentDate||a.date));
   return list;
 }
 
@@ -955,12 +964,12 @@ function addCustomPilot() {
 }
 
 // ── Date picker display ──────────────────────────────────────────────────────
-function triggerDatePicker() {
-  const inp = document.getElementById('f-date');
+function triggerDatePicker(inputId) {
+  const inp = document.getElementById(inputId || 'f-date');
   try { inp.showPicker(); } catch(e) { inp.click(); }
 }
-function onDateChange(val) {
-  const btn = document.getElementById('f-date-btn');
+function onDateChange(val, btnId) {
+  const btn = document.getElementById(btnId || 'f-date-btn');
   if (val) {
     const [y,m,d] = val.split('-');
     btn.textContent = `${d}/${m}/${y}`;
@@ -970,8 +979,8 @@ function onDateChange(val) {
     btn.classList.add('placeholder');
   }
 }
-function setDateDisplay(val) {
-  const btn = document.getElementById('f-date-btn');
+function setDateDisplay(val, btnId) {
+  const btn = document.getElementById(btnId || 'f-date-btn');
   if (val) {
     const [y,m,d] = val.split('-');
     btn.textContent = `${d}/${m}/${y}`;
@@ -1195,6 +1204,9 @@ function openAdd() {
   document.getElementById('btn-delete').style.display = 'none';
   ['f-date','f-time','f-contact','f-phone','f-email','f-notes'].forEach(id => document.getElementById(id).value = '');
   setDateDisplay('');
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('f-paydate').value = today;
+  setDateDisplay(today, 'f-paydate-btn');
   const tb = document.getElementById('f-time-btn'); tb.textContent = 'בחר שעה'; tb.classList.add('placeholder');
   setDuration(20);
   applyCount(1);
@@ -1227,6 +1239,9 @@ function openEdit(id) {
   document.getElementById('f-phone').value = f.phone || '';
   document.getElementById('f-email').value = f.email || '';
   document.getElementById('f-notes').value = f.notes || '';
+  const payDate = f.paymentDate || f.date;
+  document.getElementById('f-paydate').value = payDate;
+  setDateDisplay(payDate, 'f-paydate-btn');
   setDuration(f.duration || 20);
   applyCount(f.count || 1);
   formPayment = f.paymentMethod || null;
@@ -1269,6 +1284,7 @@ async function saveForm() {
     email: document.getElementById('f-email').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
     paymentMethod: formPayment || null,
+    paymentDate: document.getElementById('f-paydate').value || date,
     source: formSource || 'UFLY',
     pilots: [...selectedPilots],
     photo: selectedOptions.has('photo'),
