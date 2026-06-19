@@ -299,5 +299,24 @@
     "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
     "termsReceived": true,
     "calNeedsTermsUpdate": false
+  },
+  {
+    "date": "2026-06-20",
+    "time": "19:00",
+    "contact": "גולן כהן",
+    "phone": "+972 52-367-4583",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethod": "פייבוקס",
+    "paymentDate": "2026-06-19",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": false,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 17,
+    "calEventId": null
   }
 ]
