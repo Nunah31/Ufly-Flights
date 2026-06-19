@@ -278,7 +278,9 @@
     "id": 15,
     "calEventId": "klrnpv5tp4n7f3ss1ke85o7dlk",
     "termsReceived": true,
-    "calNeedsTermsUpdate": false
+    "calNeedsTermsUpdate": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-19"
   },
   {
     "date": "2026-06-24",
