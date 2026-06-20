@@ -105,6 +105,7 @@
   .toggle-row { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .toggle-row-grid4 { display: grid; grid-template-columns: repeat(4, 1fr); }
   .toggle-row-grid2 { display: grid; grid-template-columns: repeat(2, 1fr); }
+  .toggle-row-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); }
   .toggle-opt { flex: 1; min-width: 60px; padding: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; font-weight: 500; }
   .toggle-opt.active { background: #0EA5E9; color: white; font-weight: 700; }
 
@@ -200,6 +201,17 @@
     <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
   </div>
 
+  <!-- Payment date sub-filter (visible only when "תאריך תשלום" is active) -->
+  <div id="paydate-extra" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:0 4px">
+    <button type="button" class="time-btn placeholder" id="paydate-pick-btn" onclick="triggerDatePicker('paydate-pick')" style="margin:0;min-width:140px">בחר תאריך תשלום</button>
+    <input type="date" id="paydate-pick" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="onPaydatePick(this.value)">
+    <button type="button" class="btn-sm btn-outline-blue" id="paydate-clear-btn" style="display:none" onclick="clearPaydatePick()">נקה תאריך</button>
+    <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;cursor:pointer">
+      <input type="checkbox" id="paydate-future-only" checked onchange="onPaydateFutureToggle(this.checked)">
+      רק טיסות עתידיות
+    </label>
+  </div>
+
   <!-- Toolbar -->
   <div class="toolbar">
     <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
@@ -281,11 +293,12 @@
       </div>
 
       <div class="field form-full"><label>💳 שולם באמצעות</label>
-        <div class="toggle-row toggle-row-grid2" id="payment-row">
+        <div class="toggle-row toggle-row-grid3" id="payment-row">
           <button class="toggle-opt" data-p="ביט" onclick="setPayment('ביט')">ביט</button>
           <button class="toggle-opt" data-p="פייבוקס" onclick="setPayment('פייבוקס')">פייבוקס</button>
           <button class="toggle-opt" data-p="העברה בנקאית" onclick="setPayment('העברה בנקאית')">העברה בנקאית</button>
           <button class="toggle-opt" data-p="מזומן" onclick="setPayment('מזומן')">מזומן</button>
+          <button class="toggle-opt" data-p="שובר" onclick="setPayment('שובר')">שובר</button>
         </div>
       </div>
 
@@ -451,10 +464,12 @@ rebuildPilots();
 
 let flights = [];
 let currentFilter = 'future';
+let paydateFutureOnly = true;
+let paydatePickedDate = null;
 let editId = null;
 let formDuration = 20;
 let formCount = 1;
-let formPayment = null;
+let formPayments = new Set();
 let formSource = 'UFLY';
 let selectedOptions = new Set();
 let selectedPilots = new Set();
@@ -728,7 +743,8 @@ function buildCalEvent(f) {
   if (f.pilots && f.pilots.length>0) descParts.push(`טייסים: ${f.pilots.join(', ')}`);
   if (f.email) descParts.push(`מייל: ${f.email}`);
   if (f.termsReceived) descParts.push(`✅ תנאי טיסה אושרו`);
-  if (f.paymentMethod) descParts.push(`💳 שולם: ${f.paymentMethod}`);
+  if (f.paymentMethods && f.paymentMethods.length>0) descParts.push(`💳 שולם: ${f.paymentMethods.join(' + ')}`);
+  else if (f.paymentMethod) descParts.push(`💳 שולם: ${f.paymentMethod}`);
   if (f.notes) descParts.push(`הערות: ${f.notes}`);
 
   return {
@@ -859,7 +875,12 @@ function getFiltered() {
   if (currentFilter==='future')    return list.filter(f => !f.postponed && f.date >= today);
   if (currentFilter==='past')      return list.filter(f => !f.postponed && f.date < today);
   if (currentFilter==='postponed') return list.filter(f => f.postponed);
-  if (currentFilter==='paydate')   return list.sort((a,b) => (b.paymentDate||b.date).localeCompare(a.paymentDate||a.date));
+  if (currentFilter==='paydate') {
+    let pl = list.sort((a,b) => (b.paymentDate||b.date).localeCompare(a.paymentDate||a.date));
+    if (paydateFutureOnly) pl = pl.filter(f => !f.postponed && f.date >= today);
+    if (paydatePickedDate) pl = pl.filter(f => (f.paymentDate||f.date) === paydatePickedDate);
+    return pl;
+  }
   return list;
 }
 
@@ -903,7 +924,7 @@ function render() {
           <div class="card-options">✅ ${optsStr}</div>
           ${f.pilots && f.pilots.length>0?`<div class="card-options">🧑‍✈️ ${f.pilots.join(', ')}</div>`:''}
           ${f.termsReceived ? `<div class="card-notes" style="color:#16A34A;font-weight:700">✅ תנאי טיסה אושרו</div>` : ''}
-          ${f.paymentMethod ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethod}</div>` : ''}
+          ${(f.paymentMethods && f.paymentMethods.length>0) ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethods.join(' + ')}</div>` : (f.paymentMethod ? `<div class="card-notes" style="color:#7C3AED;font-weight:600">💳 שולם: ${f.paymentMethod}</div>` : '')}
           ${f.postponed?`<div class="card-notes" style="color:#EA580C;font-weight:700">🌧️ נדחתה</div>`:''}
           ${f.loggedToDiary?`<div class="card-notes" style="color:#065F46;font-weight:600">✅ בוצעה${f.loggedDate?' · '+fmtDate(f.loggedDate):''}</div>`:''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
@@ -1169,13 +1190,8 @@ function setSource(s) {
 }
 
 function setPayment(p) {
-  // toggle off if already selected
-  if (formPayment === p) {
-    formPayment = null;
-  } else {
-    formPayment = p;
-  }
-  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
+  formPayments.has(p) ? formPayments.delete(p) : formPayments.add(p);
+  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', formPayments.has(b.dataset.p)));
 }
 
 function applyCount(c) {
@@ -1193,6 +1209,34 @@ function setFilter(btn, f) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentFilter = f;
+  document.getElementById('paydate-extra').style.display = (f === 'paydate') ? 'flex' : 'none';
+  render();
+}
+
+function onPaydatePick(val) {
+  paydatePickedDate = val || null;
+  const btn = document.getElementById('paydate-pick-btn');
+  const clearBtn = document.getElementById('paydate-clear-btn');
+  if (val) {
+    const [y,m,d] = val.split('-');
+    btn.textContent = `${d}/${m}/${y}`;
+    btn.classList.remove('placeholder');
+    clearBtn.style.display = '';
+  } else {
+    btn.textContent = 'בחר תאריך תשלום';
+    btn.classList.add('placeholder');
+    clearBtn.style.display = 'none';
+  }
+  render();
+}
+
+function clearPaydatePick() {
+  document.getElementById('paydate-pick').value = '';
+  onPaydatePick('');
+}
+
+function onPaydateFutureToggle(checked) {
+  paydateFutureOnly = checked;
   render();
 }
 
@@ -1210,7 +1254,7 @@ function openAdd() {
   const tb = document.getElementById('f-time-btn'); tb.textContent = 'בחר שעה'; tb.classList.add('placeholder');
   setDuration(20);
   applyCount(1);
-  setPayment(null); formPayment = null; document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
+  formPayments = new Set(); document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.remove('active'));
   formSource = 'UFLY'; renderSourceRow();
   ['f-contact','f-phone'].forEach(id => { const el=document.getElementById(id); el.removeAttribute('readonly'); el.style.background=''; });
   selectedOptions = new Set();
@@ -1244,8 +1288,8 @@ function openEdit(id) {
   setDateDisplay(payDate, 'f-paydate-btn');
   setDuration(f.duration || 20);
   applyCount(f.count || 1);
-  formPayment = f.paymentMethod || null;
-  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', b.dataset.p === formPayment));
+  formPayments = new Set(f.paymentMethods || (f.paymentMethod ? [f.paymentMethod] : []));
+  document.querySelectorAll('#payment-row .toggle-opt').forEach(b => b.classList.toggle('active', formPayments.has(b.dataset.p)));
   formSource = f.source || 'UFLY';
   // restore readonly state for pilot-sourced flights
   const cEl = document.getElementById('f-contact'), pEl = document.getElementById('f-phone');
@@ -1283,7 +1327,8 @@ async function saveForm() {
     count: formCount,
     email: document.getElementById('f-email').value.trim(),
     notes: document.getElementById('f-notes').value.trim(),
-    paymentMethod: formPayment || null,
+    paymentMethods: [...formPayments],
+    paymentMethod: formPayments.size > 0 ? [...formPayments][0] : null,
     paymentDate: document.getElementById('f-paydate').value || date,
     source: formSource || 'UFLY',
     pilots: [...selectedPilots],
