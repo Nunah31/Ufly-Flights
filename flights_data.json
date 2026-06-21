@@ -332,7 +332,7 @@
     "phone": "+972 52-833-7599",
     "duration": 40,
     "count": 2,
-    "email": "",
+    "email": "alonth@gmail.com",
     "notes": "",
     "paymentMethods": [
       "ביט",
@@ -346,6 +346,7 @@
     "photo360": true,
     "pilotDay": false,
     "id": 18,
-    "calEventId": "630d5lutpj324rg4f4e6av00i8"
+    "calEventId": "630d5lutpj324rg4f4e6av00i8",
+    "termsReceived": true
   }
 ]
