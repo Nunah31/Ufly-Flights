@@ -324,5 +324,28 @@
     "calEventId": "sh31ta004j6jb939sc1s3gtvm0",
     "loggedToDiary": true,
     "loggedDate": "2026-06-21"
+  },
+  {
+    "date": "2026-06-30",
+    "time": "19:00",
+    "contact": "אלון אלטשטוק",
+    "phone": "+972 52-833-7599",
+    "duration": 40,
+    "count": 2,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [
+      "ביט",
+      "פייבוקס"
+    ],
+    "paymentMethod": "ביט",
+    "paymentDate": "2026-06-21",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": true,
+    "pilotDay": false,
+    "id": 18,
+    "calEventId": null
   }
 ]
