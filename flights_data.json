@@ -347,6 +347,29 @@
     "pilotDay": false,
     "id": 18,
     "calEventId": "630d5lutpj324rg4f4e6av00i8",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
+  },
+  {
+    "date": "2026-06-30",
+    "time": "18:00",
+    "contact": "תרצה שוקרון",
+    "phone": "+972 52-378-1775",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [
+      "שובר"
+    ],
+    "paymentMethod": "שובר",
+    "paymentDate": "2026-06-22",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 19,
+    "calEventId": null
   }
 ]
