@@ -358,7 +358,7 @@
     "duration": 40,
     "count": 1,
     "email": "",
-    "notes": "",
+    "notes": "שובר VKGH-ER8R-YVE5-ESX9",
     "paymentMethods": [
       "שובר"
     ],
@@ -370,6 +370,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 19,
-    "calEventId": "imehqb69qqb6qm7rgi7pkk8gos"
+    "calEventId": "imehqb69qqb6qm7rgi7pkk8gos",
+    "termsReceived": false
   }
 ]
