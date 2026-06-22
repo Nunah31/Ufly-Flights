@@ -357,7 +357,7 @@
     "phone": "+972 52-378-1775",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "tish51@walla.com",
     "notes": "שובר VKGH-ER8R-YVE5-ESX9",
     "paymentMethods": [
       "שובר"
@@ -371,6 +371,6 @@
     "pilotDay": false,
     "id": 19,
     "calEventId": "imehqb69qqb6qm7rgi7pkk8gos",
-    "termsReceived": false
+    "termsReceived": true
   }
 ]
