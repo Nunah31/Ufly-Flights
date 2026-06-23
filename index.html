@@ -58,8 +58,8 @@
   .card-options { font-size: 14px; color: #7C3AED; margin-top: 2px; }
   .card-notes { font-size: 13px; color: #9CA3AF; margin-top: 3px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .card-actions { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
-  .icon-btn { background: #F0F9FF; border: none; border-radius: 7px; padding: 6px 10px; cursor: pointer; font-size: 16px; line-height: 1; text-decoration: none; display: block; text-align: center; }
+  .card-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; flex-shrink: 0; }
+  .icon-btn { background: #F0F9FF; border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 19px; line-height: 1; text-decoration: none; display: block; text-align: center; }
   .icon-btn:hover { background: #E0F2FE; }
   .icon-btn.active { background: #FED7AA; }
   .cal-needs-update { background: #FEF9C3 !important; animation: pulse-yellow 1.5s infinite; }
@@ -155,7 +155,7 @@
     .card-contact span { font-size: 17px; }
     .card-options { font-size: 16px; }
     .card-notes { font-size: 15px; }
-    .icon-btn { font-size: 20px; padding: 8px 13px; }
+    .icon-btn { font-size: 24px; padding: 10px; }
     .modal-title { font-size: 22px; }
     .field label { font-size: 16px; }
     .field input, .field select, .field textarea { font-size: 18px; padding: 11px 12px; }
@@ -417,11 +417,12 @@ function rebuildPilots() {
     BASE_PILOTS = settings.pilots.map(p => p.name);
 }
 
-const TEMPLATES_VERSION = 7;
+const TEMPLATES_VERSION = 8;
 
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
   locationLink: 'https://waze.com/ul/hsv8ze36k5',
+  reviewLink: 'https://g.page/r/CV3VQg4NUrp8EAI/review',
   msgTemplateDetails:
 `היי {שם} :)
 איזה כיף לך, {נקבעה_הטיסה} בטרקטורון מעופף:
@@ -441,6 +442,11 @@ const DEFAULT_SETTINGS = {
 {קישור_מיקום}`,
   msgTemplatePostpone:
 `היי {שם}, בשל תנאי מזג האוויר לא ניתן לקיים את הטיסה במועד שתואם עבורך. אנא צור/י קשר לתאום מועד חדש 🙏🪂`,
+  msgTemplateReview:
+`היי {שם}! 🪂
+טסתם איתנו בטרקטורון המעופף, היה כיף?
+נשמח אם תוכלו להקדיש כמה רגעים לדרג ולהמליץ עלינו בגוגל ⭐
+{קישור_ביקורת}`,
   pilotMsgTemplate:
 `היי {שם_טייס}, פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`,
   pilotPhones: {},
@@ -555,8 +561,10 @@ function migrateSettings() {
     settings.msgTemplateTerms    = DEFAULT_SETTINGS.msgTemplateTerms;
     settings.msgTemplateLocation = DEFAULT_SETTINGS.msgTemplateLocation;
     settings.msgTemplatePostpone = DEFAULT_SETTINGS.msgTemplatePostpone;
+    settings.msgTemplateReview   = DEFAULT_SETTINGS.msgTemplateReview;
     settings.pilotMsgTemplate    = DEFAULT_SETTINGS.pilotMsgTemplate;
     settings.locationLink        = DEFAULT_SETTINGS.locationLink;
+    settings.reviewLink          = DEFAULT_SETTINGS.reviewLink;
     settings.templatesVersion    = TEMPLATES_VERSION;
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     return true;
@@ -703,6 +711,10 @@ async function logFlightToDiary(id) {
     saveFlights();
     render();
     indicator.textContent = `✅ נשלח ליומן! (${count} טיסה${count > 1 ? 'ות' : ''})`;
+    // Only request a review from clients who booked directly through UFLY
+    if (!f.source || f.source === 'UFLY') {
+      setTimeout(() => openReview(id), 600);
+    }
   } catch(e) {
     indicator.textContent = '⚠️ שגיאה בשליחה ליומן';
   }
@@ -936,6 +948,7 @@ function render() {
           <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'🌧️✓':'🌧️'}</button>
           <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה">📨</button>
           <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
+          <button class="icon-btn" onclick="openReview(${f.id})" title="שלח בקשת המלצה בגוגל">⭐</button>
         </div>
       </div>
     </div>`;
@@ -1388,6 +1401,7 @@ function fillTemplate(template, f) {
   msg = msg.replaceAll('{כולל}', includesLabel(f));
   msg = msg.replaceAll('{קישור_תנאים}', settings.termsLink || '');
   msg = msg.replaceAll('{קישור_מיקום}', settings.locationLink || '');
+  msg = msg.replaceAll('{קישור_ביקורת}', settings.reviewLink || '');
   return msg;
 }
 
@@ -1435,6 +1449,26 @@ function openPostpone(id) {
     <div class="msg-preview" id="msg-preview-postpone">${msg.replace(/</g,'&lt;')}</div>
     <div class="send-btns">
       <button class="btn-copy" id="btn-copy-postpone" onclick="copyMsg('postpone')">📋 העתק</button>
+      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
+    </div>`;
+  document.getElementById('send-panel').classList.add('open');
+  pushOverlayState('send');
+}
+
+// ── Review request ───────────────────────────────────────────────────────────
+function openReview(id) {
+  const f = flights.find(x => x.id === id);
+  if (!f) return;
+  sendFlightId = id;
+  document.getElementById('send-title').textContent = `⭐ בקשת המלצה מ${f.contact}`;
+  const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
+  const msg = fillTemplate(settings.msgTemplateReview || '', f);
+  const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
+  document.getElementById('send-body').innerHTML = `
+    <div class="send-section-title">⭐ בקשת המלצה בגוגל</div>
+    <div class="msg-preview" id="msg-preview-review">${msg.replace(/</g,'&lt;')}</div>
+    <div class="send-btns">
+      <button class="btn-copy" id="btn-copy-review" onclick="copyMsg('review')">📋 העתק</button>
       <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
     </div>`;
   document.getElementById('send-panel').classList.add('open');
@@ -1512,10 +1546,12 @@ function openSettings() {
   document.getElementById('settings-token').value = localStorage.getItem('gh_token') || '';
   document.getElementById('settings-terms').value = settings.termsLink || '';
   document.getElementById('settings-location').value = settings.locationLink || '';
+  document.getElementById('settings-review-link').value = settings.reviewLink || '';
   document.getElementById('settings-template-details').value = settings.msgTemplateDetails || '';
   document.getElementById('settings-template-terms').value = settings.msgTemplateTerms || '';
   document.getElementById('settings-template-location').value = settings.msgTemplateLocation || '';
   document.getElementById('settings-template-postpone').value = settings.msgTemplatePostpone || '';
+  document.getElementById('settings-template-review').value = settings.msgTemplateReview || '';
   document.getElementById('settings-template-pilots').value = settings.pilotMsgTemplate || '';
   renderPilotPhonesList();
   document.getElementById('settings-modal').style.display = 'flex';
@@ -1573,10 +1609,12 @@ function saveSettings() {
   }
   settings.termsLink = document.getElementById('settings-terms').value.trim();
   settings.locationLink = document.getElementById('settings-location').value.trim();
+  settings.reviewLink = document.getElementById('settings-review-link').value.trim();
   settings.msgTemplateDetails = document.getElementById('settings-template-details').value;
   settings.msgTemplateTerms = document.getElementById('settings-template-terms').value;
   settings.msgTemplateLocation = document.getElementById('settings-template-location').value;
   settings.msgTemplatePostpone = document.getElementById('settings-template-postpone').value;
+  settings.msgTemplateReview = document.getElementById('settings-template-review').value;
   settings.pilotMsgTemplate = document.getElementById('settings-template-pilots').value;
   // pilots array is already updated live via oninput / movePilot / removePilot / addPilotToList
   // keep pilotPhones in sync for backwards compat
@@ -1652,7 +1690,10 @@ if (!localStorage.getItem('gh_token')) {
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">📍 קישור למיקום המנחת</label>
     <input id="settings-location" type="text" placeholder="https://maps.google.com/..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
 
-    <p style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.5">ניתן להשתמש בתגיות: {שם} {תאריך} {שעה} {משך} {כולל} {קישור_תנאים} {קישור_מיקום}</p>
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">⭐ קישור לביקורת בגוגל</label>
+    <input id="settings-review-link" type="text" placeholder="https://g.page/r/..." style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:14px;direction:ltr">
+
+    <p style="font-size:12px;color:#6B7280;margin-bottom:10px;line-height:1.5">ניתן להשתמש בתגיות: {שם} {תאריך} {שעה} {משך} {כולל} {קישור_תנאים} {קישור_מיקום} {קישור_ביקורת}</p>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">💬 הודעה 1 — פרטי הטיסה</label>
     <textarea id="settings-template-details" rows="7" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:14px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
@@ -1665,6 +1706,9 @@ if (!localStorage.getItem('gh_token')) {
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🌧️ הודעה — דחיית טיסה עקב מזג אוויר</label>
     <textarea id="settings-template-postpone" rows="6" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
+
+    <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">⭐ הודעה — בקשת המלצה אחרי טיסה</label>
+    <textarea id="settings-template-review" rows="5" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
 
     <label style="display:block;font-size:14px;font-weight:600;color:#374151;margin-bottom:4px">🧑‍✈️ הודעה לטייסים (לכל טיסה נבחרת)</label>
     <textarea id="settings-template-pilots" rows="3" style="width:100%;padding:10px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;direction:rtl;resize:vertical;line-height:1.6"></textarea>
