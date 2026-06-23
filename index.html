@@ -16,9 +16,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif; background: #F0F4FF; min-height: 100vh; direction: rtl; font-size: 16px; }
 
-  .sticky-top { position: sticky; top: 0; z-index: 100; }
-
-  .header { background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 100%); padding: 18px 16px 14px; color: white; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .header { background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 100%); padding: 18px 16px 14px; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
   .header-inner { max-width: 640px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
   .header h1 { font-size: 24px; font-weight: 700; }
   .header p { font-size: 15px; opacity: 0.75; margin-top: 2px; }
@@ -28,7 +26,6 @@
 
   .main { max-width: 640px; margin: 0 auto; padding: 14px 12px 80px; }
 
-  .sticky-controls { background: #F0F4FF; max-width: 640px; margin: 0 auto; padding: 12px 12px 6px; box-shadow: 0 4px 8px -4px rgba(0,0,0,0.08); }
   .filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .filter-btn { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; transition: all 0.15s; }
   .filter-btn.active { background: #0EA5E9; color: white; font-weight: 600; }
@@ -61,8 +58,8 @@
   .card-options { font-size: 14px; color: #7C3AED; margin-top: 2px; }
   .card-notes { font-size: 13px; color: #9CA3AF; margin-top: 3px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  .card-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; flex-shrink: 0; }
-  .icon-btn { background: #F0F9FF; border: none; border-radius: 8px; padding: 8px 10px; cursor: pointer; font-size: 19px; line-height: 1; text-decoration: none; display: block; text-align: center; }
+  .card-actions { display: flex; flex-direction: row; gap: 5px; padding: 0 14px 10px; }
+  .icon-btn { flex: 1; background: #F0F9FF; border: none; border-radius: 7px; padding: 7px 4px; cursor: pointer; font-size: 17px; line-height: 1; text-decoration: none; display: block; text-align: center; }
   .icon-btn:hover { background: #E0F2FE; }
   .icon-btn.active { background: #FED7AA; }
   .cal-needs-update { background: #FEF9C3 !important; animation: pulse-yellow 1.5s infinite; }
@@ -158,7 +155,7 @@
     .card-contact span { font-size: 17px; }
     .card-options { font-size: 16px; }
     .card-notes { font-size: 15px; }
-    .icon-btn { font-size: 24px; padding: 10px; }
+    .icon-btn { font-size: 20px; padding: 8px 4px; }
     .modal-title { font-size: 22px; }
     .field label { font-size: 16px; }
     .field input, .field select, .field textarea { font-size: 18px; padding: 11px 12px; }
@@ -181,51 +178,47 @@
 <body>
 
 <!-- Header -->
-<div class="sticky-top">
-  <div class="header">
-    <div class="header-inner">
-      <div>
-        <h1>✈️ טיסות חוויה</h1>
-        <p id="flight-count"></p>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
-        <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
-      </div>
+<div class="header">
+  <div class="header-inner">
+    <div>
+      <h1>✈️ טיסות חוויה</h1>
+      <p id="flight-count"></p>
     </div>
-  </div>
-
-  <div class="sticky-controls">
-    <!-- Filters -->
-    <div class="filters" id="filters">
-      <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
-      <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
-      <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
-      <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
-      <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
-    </div>
-
-    <!-- Payment date sub-filter (visible only when "תאריך תשלום" is active) -->
-    <div id="paydate-extra" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:0 4px">
-      <button type="button" class="time-btn placeholder" id="paydate-pick-btn" onclick="triggerDatePicker('paydate-pick')" style="margin:0;min-width:140px">בחר תאריך תשלום</button>
-      <input type="date" id="paydate-pick" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="onPaydatePick(this.value)">
-      <button type="button" class="btn-sm btn-outline-blue" id="paydate-clear-btn" style="display:none" onclick="clearPaydatePick()">נקה תאריך</button>
-      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;cursor:pointer">
-        <input type="checkbox" id="paydate-future-only" checked onchange="onPaydateFutureToggle(this.checked)">
-        רק טיסות עתידיות
-      </label>
-    </div>
-
-    <!-- Toolbar -->
-    <div class="toolbar" style="margin-bottom:0">
-      <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
-      <button class="btn-sm btn-outline-red" id="btn-clear" style="display:none" onclick="clearSel()">נקה בחירה</button>
-      <button class="btn-sm btn-solid-blue" id="btn-send-pilots" style="display:none" onclick="openSendPilots()">📤 שלח לטייסים</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
+      <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
     </div>
   </div>
 </div>
 
 <div class="main">
+  <!-- Filters -->
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
+    <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
+    <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
+    <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
+    <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
+  </div>
+
+  <!-- Payment date sub-filter (visible only when "תאריך תשלום" is active) -->
+  <div id="paydate-extra" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:0 4px">
+    <button type="button" class="time-btn placeholder" id="paydate-pick-btn" onclick="triggerDatePicker('paydate-pick')" style="margin:0;min-width:140px">בחר תאריך תשלום</button>
+    <input type="date" id="paydate-pick" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="onPaydatePick(this.value)">
+    <button type="button" class="btn-sm btn-outline-blue" id="paydate-clear-btn" style="display:none" onclick="clearPaydatePick()">נקה תאריך</button>
+    <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;cursor:pointer">
+      <input type="checkbox" id="paydate-future-only" checked onchange="onPaydateFutureToggle(this.checked)">
+      רק טיסות עתידיות
+    </label>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
+    <button class="btn-sm btn-outline-red" id="btn-clear" style="display:none" onclick="clearSel()">נקה בחירה</button>
+    <button class="btn-sm btn-solid-blue" id="btn-send-pilots" style="display:none" onclick="openSendPilots()">📤 שלח לטייסים</button>
+  </div>
+
   <!-- List -->
   <div class="flights-list" id="flights-list"></div>
   <p class="footer-hint">✏️ ערוך · 📅 הוסף ליומן גוגל · 📤 שלח ללקוח</p>
@@ -718,9 +711,9 @@ async function logFlightToDiary(id) {
     saveFlights();
     render();
     indicator.textContent = `✅ נשלח ליומן! (${count} טיסה${count > 1 ? 'ות' : ''})`;
-    // Only request a review from clients who booked directly through UFLY
+    // Open the client message panel (now includes the review request) — UFLY bookings only
     if (!f.source || f.source === 'UFLY') {
-      setTimeout(() => openReview(id), 600);
+      setTimeout(() => openSend(id), 600);
     }
   } catch(e) {
     indicator.textContent = '⚠️ שגיאה בשליחה ליומן';
@@ -948,15 +941,14 @@ function render() {
           ${f.loggedToDiary?`<div class="card-notes" style="color:#065F46;font-weight:600">✅ בוצעה${f.loggedDate?' · '+fmtDate(f.loggedDate):''}</div>`:''}
           ${f.notes?`<div class="card-notes">💬 ${f.notes}</div>`:''}
         </div>
-        <div class="card-actions">
-          <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
-          <button class="icon-btn${f.calNeedsTermsUpdate?' cal-needs-update':''}" onclick="handleCalClick(${f.id})" title="${f.calNeedsTermsUpdate?'עדכן יומן — התקבל אישור תנאים':f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calNeedsTermsUpdate?'📅⚡':f.calEventId?'📅✅':'📅'}</button>
-          <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
-          <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'🌧️✓':'🌧️'}</button>
-          <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה">📨</button>
-          <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
-          <button class="icon-btn" onclick="openReview(${f.id})" title="שלח בקשת המלצה בגוגל">⭐</button>
-        </div>
+      </div>
+      <div class="card-actions">
+        <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
+        <button class="icon-btn${f.calNeedsTermsUpdate?' cal-needs-update':''}" onclick="handleCalClick(${f.id})" title="${f.calNeedsTermsUpdate?'עדכן יומן — התקבל אישור תנאים':f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calNeedsTermsUpdate?'📅⚡':f.calEventId?'📅✅':'📅'}</button>
+        <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח">📤</button>
+        <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'🌧️✓':'🌧️'}</button>
+        <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה">📨</button>
+        <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
       </div>
     </div>`;
   }).join('');
@@ -1413,9 +1405,10 @@ function fillTemplate(template, f) {
 }
 
 const MSG_SECTIONS = [
-  { key: 'details',  title: '1️⃣ פרטי הטיסה',        templateKey: 'msgTemplateDetails' },
-  { key: 'terms',    title: '2️⃣ אישור תנאי טיסה',   templateKey: 'msgTemplateTerms' },
-  { key: 'location', title: '3️⃣ מיקום המנחת',        templateKey: 'msgTemplateLocation' },
+  { key: 'details',  title: '1️⃣ פרטי הטיסה',          templateKey: 'msgTemplateDetails' },
+  { key: 'terms',    title: '2️⃣ אישור תנאי טיסה',     templateKey: 'msgTemplateTerms' },
+  { key: 'location', title: '3️⃣ מיקום המנחת',          templateKey: 'msgTemplateLocation' },
+  { key: 'review',   title: '4️⃣ בקשת המלצה בגוגל',    templateKey: 'msgTemplateReview' },
 ];
 
 function openSend(id) {
@@ -1456,26 +1449,6 @@ function openPostpone(id) {
     <div class="msg-preview" id="msg-preview-postpone">${msg.replace(/</g,'&lt;')}</div>
     <div class="send-btns">
       <button class="btn-copy" id="btn-copy-postpone" onclick="copyMsg('postpone')">📋 העתק</button>
-      <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
-    </div>`;
-  document.getElementById('send-panel').classList.add('open');
-  pushOverlayState('send');
-}
-
-// ── Review request ───────────────────────────────────────────────────────────
-function openReview(id) {
-  const f = flights.find(x => x.id === id);
-  if (!f) return;
-  sendFlightId = id;
-  document.getElementById('send-title').textContent = `⭐ בקשת המלצה מ${f.contact}`;
-  const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
-  const msg = fillTemplate(settings.msgTemplateReview || '', f);
-  const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
-  document.getElementById('send-body').innerHTML = `
-    <div class="send-section-title">⭐ בקשת המלצה בגוגל</div>
-    <div class="msg-preview" id="msg-preview-review">${msg.replace(/</g,'&lt;')}</div>
-    <div class="send-btns">
-      <button class="btn-copy" id="btn-copy-review" onclick="copyMsg('review')">📋 העתק</button>
       <a class="btn-wa" href="${waHref}" target="_blank">💬 שלח בוואטסאפ</a>
     </div>`;
   document.getElementById('send-panel').classList.add('open');
