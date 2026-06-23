@@ -234,7 +234,11 @@
     "count": 1,
     "email": "yaelkomari@gmail.com",
     "notes": "40 דק טיסה ועוד 3 טיסות של 10 דק כולל צילום",
+    "paymentMethods": [
+      "פייבוקס"
+    ],
     "paymentMethod": "פייבוקס",
+    "paymentDate": "2026-06-26",
     "source": "UFLY",
     "pilots": [],
     "photo": true,
@@ -242,8 +246,7 @@
     "pilotDay": false,
     "id": 13,
     "calEventId": "lflop042u6l8ncqeq8uf11leh0",
-    "termsReceived": true,
-    "postponed": true
+    "termsReceived": true
   },
   {
     "date": "2026-06-26",
