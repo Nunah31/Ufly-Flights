@@ -16,7 +16,9 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Heebo', 'Arial Hebrew', Arial, sans-serif; background: #F0F4FF; min-height: 100vh; direction: rtl; font-size: 16px; }
 
-  .header { background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 100%); padding: 18px 16px 14px; color: white; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .sticky-top { position: sticky; top: 0; z-index: 100; }
+
+  .header { background: linear-gradient(135deg, #0C4A6E 0%, #0EA5E9 100%); padding: 18px 16px 14px; color: white; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
   .header-inner { max-width: 640px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
   .header h1 { font-size: 24px; font-weight: 700; }
   .header p { font-size: 15px; opacity: 0.75; margin-top: 2px; }
@@ -26,6 +28,7 @@
 
   .main { max-width: 640px; margin: 0 auto; padding: 14px 12px 80px; }
 
+  .sticky-controls { background: #F0F4FF; max-width: 640px; margin: 0 auto; padding: 12px 12px 6px; box-shadow: 0 4px 8px -4px rgba(0,0,0,0.08); }
   .filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
   .filter-btn { padding: 7px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; background: #E2E8F0; color: #374151; transition: all 0.15s; }
   .filter-btn.active { background: #0EA5E9; color: white; font-weight: 600; }
@@ -178,47 +181,51 @@
 <body>
 
 <!-- Header -->
-<div class="header">
-  <div class="header-inner">
-    <div>
-      <h1>✈️ טיסות חוויה</h1>
-      <p id="flight-count"></p>
+<div class="sticky-top">
+  <div class="header">
+    <div class="header-inner">
+      <div>
+        <h1>✈️ טיסות חוויה</h1>
+        <p id="flight-count"></p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
+        <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
+      </div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
-      <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
+  </div>
+
+  <div class="sticky-controls">
+    <!-- Filters -->
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
+      <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
+      <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
+      <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
+      <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
+    </div>
+
+    <!-- Payment date sub-filter (visible only when "תאריך תשלום" is active) -->
+    <div id="paydate-extra" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:0 4px">
+      <button type="button" class="time-btn placeholder" id="paydate-pick-btn" onclick="triggerDatePicker('paydate-pick')" style="margin:0;min-width:140px">בחר תאריך תשלום</button>
+      <input type="date" id="paydate-pick" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="onPaydatePick(this.value)">
+      <button type="button" class="btn-sm btn-outline-blue" id="paydate-clear-btn" style="display:none" onclick="clearPaydatePick()">נקה תאריך</button>
+      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;cursor:pointer">
+        <input type="checkbox" id="paydate-future-only" checked onchange="onPaydateFutureToggle(this.checked)">
+        רק טיסות עתידיות
+      </label>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" style="margin-bottom:0">
+      <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
+      <button class="btn-sm btn-outline-red" id="btn-clear" style="display:none" onclick="clearSel()">נקה בחירה</button>
+      <button class="btn-sm btn-solid-blue" id="btn-send-pilots" style="display:none" onclick="openSendPilots()">📤 שלח לטייסים</button>
     </div>
   </div>
 </div>
 
 <div class="main">
-  <!-- Filters -->
-  <div class="filters" id="filters">
-    <button class="filter-btn active" data-filter="future" onclick="setFilter(this,'future')">עתידיות</button>
-    <button class="filter-btn" data-filter="past" onclick="setFilter(this,'past')">עבר</button>
-    <button class="filter-btn" data-filter="postponed" onclick="setFilter(this,'postponed')">נדחו</button>
-    <button class="filter-btn" data-filter="all" onclick="setFilter(this,'all')">הכל</button>
-    <button class="filter-btn" data-filter="paydate" onclick="setFilter(this,'paydate')">תאריך תשלום</button>
-  </div>
-
-  <!-- Payment date sub-filter (visible only when "תאריך תשלום" is active) -->
-  <div id="paydate-extra" style="display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;padding:0 4px">
-    <button type="button" class="time-btn placeholder" id="paydate-pick-btn" onclick="triggerDatePicker('paydate-pick')" style="margin:0;min-width:140px">בחר תאריך תשלום</button>
-    <input type="date" id="paydate-pick" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none" onchange="onPaydatePick(this.value)">
-    <button type="button" class="btn-sm btn-outline-blue" id="paydate-clear-btn" style="display:none" onclick="clearPaydatePick()">נקה תאריך</button>
-    <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#374151;cursor:pointer">
-      <input type="checkbox" id="paydate-future-only" checked onchange="onPaydateFutureToggle(this.checked)">
-      רק טיסות עתידיות
-    </label>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <button class="btn-sm btn-outline-blue" onclick="selectAll()">בחר הכל</button>
-    <button class="btn-sm btn-outline-red" id="btn-clear" style="display:none" onclick="clearSel()">נקה בחירה</button>
-    <button class="btn-sm btn-solid-blue" id="btn-send-pilots" style="display:none" onclick="openSendPilots()">📤 שלח לטייסים</button>
-  </div>
-
   <!-- List -->
   <div class="flights-list" id="flights-list"></div>
   <p class="footer-hint">✏️ ערוך · 📅 הוסף ליומן גוגל · 📤 שלח ללקוח</p>
