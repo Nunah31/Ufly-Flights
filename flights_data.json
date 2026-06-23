@@ -302,7 +302,8 @@
     "id": 16,
     "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
     "termsReceived": true,
-    "calNeedsTermsUpdate": false
+    "calNeedsTermsUpdate": false,
+    "postponed": true
   },
   {
     "date": "2026-06-20",
