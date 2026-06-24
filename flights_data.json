@@ -32,7 +32,9 @@
     "count": 2,
     "email": "",
     "notes": "",
+    "paymentMethods": [],
     "paymentMethod": null,
+    "paymentDate": "2026-06-04",
     "source": "UFLY",
     "pilots": [
       "אביעד"
@@ -42,9 +44,7 @@
     "pilotDay": false,
     "id": 2,
     "calEventId": "gff25696ghourga5k4o66ue18o",
-    "termsReceived": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-18"
+    "termsReceived": false
   },
   {
     "date": "2026-06-19",
