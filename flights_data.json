@@ -191,11 +191,15 @@
     "time": "19:00",
     "contact": "מאיר זוהר",
     "phone": "+972 58-412-8091",
-    "duration": 30,
+    "duration": 10,
     "count": 1,
     "email": "meirzohar6@gmail.com",
-    "notes": "יתרת תשלום 550",
+    "notes": "",
+    "paymentMethods": [
+      "ביט"
+    ],
     "paymentMethod": "ביט",
+    "paymentDate": "2026-06-17",
     "source": "UFLY",
     "pilots": [],
     "photo": true,
@@ -203,10 +207,7 @@
     "pilotDay": false,
     "id": 11,
     "calEventId": "ph1oj6ekk1m3br4equa2vipqr0",
-    "termsReceived": true,
-    "calNeedsTermsUpdate": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-17"
+    "termsReceived": true
   },
   {
     "date": "2026-06-17",
