@@ -128,7 +128,7 @@
     "paymentDate": "2026-06-11",
     "source": "יריב",
     "pilots": [],
-    "photo": false,
+    "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 7,
