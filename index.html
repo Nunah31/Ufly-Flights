@@ -885,7 +885,7 @@ function getFiltered() {
   const today = new Date().toISOString().slice(0,10);
   let list = [...flights].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
   if (currentFilter==='future')    return list.filter(f => !f.postponed && f.date >= today);
-  if (currentFilter==='past')      return list.filter(f => !f.postponed && f.date < today);
+  if (currentFilter==='past')      return list.filter(f => !f.postponed && f.date < today).reverse();
   if (currentFilter==='postponed') return list.filter(f => f.postponed);
   if (currentFilter==='paydate') {
     let pl = list.sort((a,b) => (b.paymentDate||b.date).localeCompare(a.paymentDate||a.date));
