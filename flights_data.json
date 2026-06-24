@@ -322,7 +322,7 @@
     "time": "18:00",
     "contact": "ענבר שושן",
     "phone": "+972 54-932-2948",
-    "duration": 40,
+    "duration": 60,
     "count": 1,
     "email": "inbarshu12@gmail.com",
     "notes": "",
@@ -338,9 +338,7 @@
     "pilotDay": false,
     "id": 16,
     "calEventId": "0hqk8i1imc2e5fg4fpu639i49k",
-    "termsReceived": true,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-24"
+    "termsReceived": true
   },
   {
     "date": "2026-06-20",
