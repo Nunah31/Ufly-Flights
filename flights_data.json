@@ -98,7 +98,12 @@
     "count": 2,
     "email": "dudusb@walla.com",
     "notes": "",
+    "paymentMethods": [
+      "העברה בנקאית"
+    ],
     "paymentMethod": "העברה בנקאית",
+    "paymentDate": "2026-06-13",
+    "source": "UFLY",
     "pilots": [
       "שרון"
     ],
@@ -107,9 +112,7 @@
     "pilotDay": false,
     "id": 6,
     "calEventId": "1e99hv3lm2njbj722f4bhbpilo",
-    "termsReceived": true,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-15"
+    "termsReceived": true
   },
   {
     "date": "2026-06-11",
