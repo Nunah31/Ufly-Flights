@@ -8,6 +8,10 @@
     "count": 4,
     "email": "ashertvili@gmail.com",
     "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-06-07",
+    "source": "UFLY",
     "pilots": [
       "דור",
       "שרון",
@@ -18,10 +22,7 @@
     "pilotDay": true,
     "id": 1,
     "calEventId": "nd5dml4etgtfsml38tiqfesmoo",
-    "termsReceived": true,
-    "postponed": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-17"
+    "termsReceived": true
   },
   {
     "date": "2026-06-18",
