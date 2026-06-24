@@ -399,11 +399,14 @@
     "paymentMethod": "העברה בנקאית",
     "paymentDate": "2026-06-24",
     "source": "UFLY",
-    "pilots": [],
+    "pilots": [
+      "שרון"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 20,
-    "calEventId": "u4c9qgpr6mrkmmmcdu1r3jvac0"
+    "calEventId": "u4c9qgpr6mrkmmmcdu1r3jvac0",
+    "termsReceived": false
   }
 ]
