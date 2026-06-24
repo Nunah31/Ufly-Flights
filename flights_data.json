@@ -270,14 +270,19 @@
     "count": 3,
     "email": "",
     "notes": "",
+    "paymentMethods": [
+      "ביט"
+    ],
     "paymentMethod": "ביט",
+    "paymentDate": "2026-06-17",
     "source": "UFLY",
     "pilots": [],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 14,
-    "calEventId": "kmsanj5et8h9qa9ef5n09jb69o"
+    "calEventId": "kmsanj5et8h9qa9ef5n09jb69o",
+    "termsReceived": false
   },
   {
     "date": "2026-06-19",
