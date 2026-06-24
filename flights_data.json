@@ -213,22 +213,23 @@
     "time": "08:00",
     "contact": "תומר לביא",
     "phone": "+972 54-359-8686",
-    "duration": 40,
+    "duration": 10,
     "count": 1,
     "email": "Tomerla@shufersal.co.il",
     "notes": "יתרת תשלום 100 שח",
+    "paymentMethods": [
+      "פייבוקס"
+    ],
     "paymentMethod": "פייבוקס",
+    "paymentDate": "2026-06-17",
     "source": "UFLY",
     "pilots": [],
-    "photo": true,
+    "photo": false,
     "photo360": false,
     "pilotDay": false,
     "id": 12,
     "calEventId": "vup2a27r8v6ugcivkng3sv7frs",
-    "termsReceived": true,
-    "calNeedsTermsUpdate": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-17"
+    "termsReceived": true
   },
   {
     "date": "2026-06-26",
