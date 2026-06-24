@@ -144,8 +144,10 @@
     "count": 1,
     "email": "",
     "notes": "",
-    "paymentMethods": [],
-    "paymentMethod": null,
+    "paymentMethods": [
+      "פייבוקס"
+    ],
+    "paymentMethod": "פייבוקס",
     "paymentDate": "2026-06-12",
     "source": "UFLY",
     "pilots": [],
