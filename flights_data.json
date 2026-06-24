@@ -53,15 +53,19 @@
     "phone": "0538218463",
     "duration": 40,
     "count": 1,
+    "email": "",
     "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-05-19",
+    "source": "UFLY",
     "pilots": [],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 3,
     "calEventId": "mhduun0l0v60gp0old2vuspdms",
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-19"
+    "termsReceived": false
   },
   {
     "date": "2026-07-17",
