@@ -166,8 +166,12 @@
     "duration": 20,
     "count": 1,
     "email": "avivsher98@gmail.com",
-    "notes": "שובר טיסה",
-    "paymentMethod": null,
+    "notes": "שובר טיסה שרכשה רותם הר זהב",
+    "paymentMethods": [
+      "ביט"
+    ],
+    "paymentMethod": "ביט",
+    "paymentDate": "2026-03-26",
     "source": "UFLY",
     "pilots": [],
     "photo": false,
@@ -175,10 +179,7 @@
     "pilotDay": false,
     "id": 9,
     "calEventId": "o39iucch0h2h229jou59udr1uo",
-    "termsReceived": true,
-    "calNeedsTermsUpdate": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-15"
+    "termsReceived": true
   },
   {
     "date": "2026-08-08",
