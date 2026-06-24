@@ -165,21 +165,26 @@
   },
   {
     "date": "2026-08-01",
-    "time": "19:00",
+    "time": "08:00",
     "contact": "יהב אורון",
     "phone": "+972 52-352-3181",
     "duration": 40,
     "count": 1,
     "email": "",
     "notes": "",
+    "paymentMethods": [
+      "ביט"
+    ],
     "paymentMethod": "ביט",
+    "paymentDate": "2026-08-01",
     "source": "UFLY",
     "pilots": [],
     "photo": false,
     "photo360": true,
     "pilotDay": false,
     "id": 10,
-    "calEventId": null
+    "calEventId": null,
+    "termsReceived": false
   },
   {
     "date": "2026-06-17",
