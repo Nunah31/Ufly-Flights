@@ -202,7 +202,7 @@
     "paymentDate": "2026-06-17",
     "source": "UFLY",
     "pilots": [],
-    "photo": true,
+    "photo": false,
     "photo360": false,
     "pilotDay": false,
     "id": 11,
