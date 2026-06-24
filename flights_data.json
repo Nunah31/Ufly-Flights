@@ -70,13 +70,19 @@
     "phone": "972 54-740-3073",
     "duration": 40,
     "count": 1,
+    "email": "",
     "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-06-05",
+    "source": "UFLY",
     "pilots": [],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 4,
-    "calEventId": "ofrlc617scn2ik22qou2e4d1q4"
+    "calEventId": "ofrlc617scn2ik22qou2e4d1q4",
+    "termsReceived": false
   },
   {
     "date": "2026-06-13",
