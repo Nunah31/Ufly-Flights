@@ -951,7 +951,7 @@ function render() {
         <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
         <button class="icon-btn${f.calNeedsTermsUpdate?' cal-needs-update':''}" onclick="handleCalClick(${f.id})" title="${f.calNeedsTermsUpdate?'עדכן יומן — התקבל אישור תנאים':f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calNeedsTermsUpdate?'📅⚡':f.calEventId?'📅✅':'📅'}</button>
         <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח" style="font-size:24px">✉️</button>
-        <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה ושלח הודעה ללקוח'}" style="font-size:22px">${f.postponed?'❌✓':'❌'}</button>
+        <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה ושלח הודעה ללקוח'}" style="font-size:22px">${f.postponed?'⛈️✓':'⛈️'}</button>
         <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
       </div>
     </div>`;
