@@ -54,10 +54,10 @@
   .card-date { font-weight: 700; font-size: 18px; color: #0C4A6E; }
   .badge { font-size: 13px; padding: 3px 9px; border-radius: 10px; font-weight: 500; border: 1px solid; }
   .dur-badge { font-size: 17px; font-weight: 600; padding: 4px 10px; border-radius: 10px; background: #F0F9FF; color: #0369A1; }
-  .card-contact { font-size: 16px; color: #111827; }
-  .card-contact span { color: #64748B; font-size: 15px; }
-  .card-options { font-size: 14px; color: #7C3AED; margin-top: 2px; }
-  .card-notes { font-size: 13px; color: #9CA3AF; margin-top: 3px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-contact { font-size: 18px; color: #111827; }
+  .card-contact span, .card-contact a { color: #64748B; font-size: 17px; }
+  .card-options { font-size: 16px; color: #7C3AED; margin-top: 3px; }
+  .card-notes { font-size: 15px; color: #9CA3AF; margin-top: 4px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .card-actions { display: flex; flex-direction: row; gap: 5px; padding: 0 14px 10px; }
   .icon-btn { flex: 1; background: #F0F9FF; border: none; border-radius: 7px; padding: 7px 4px; cursor: pointer; font-size: 17px; line-height: 1; text-decoration: none; display: block; text-align: center; }
@@ -152,10 +152,10 @@
     .card-date { font-size: 22px; }
     .badge { font-size: 15px; padding: 4px 11px; }
     .dur-badge { font-size: 19px; padding: 5px 11px; }
-    .card-contact { font-size: 19px; }
-    .card-contact span { font-size: 17px; }
-    .card-options { font-size: 16px; }
-    .card-notes { font-size: 15px; }
+    .card-contact { font-size: 21px; }
+    .card-contact span, .card-contact a { font-size: 19px; }
+    .card-options { font-size: 18px; }
+    .card-notes { font-size: 17px; }
     .icon-btn { font-size: 20px; padding: 8px 4px; }
     .modal-title { font-size: 22px; }
     .field label { font-size: 16px; }
@@ -417,7 +417,7 @@ function rebuildPilots() {
     BASE_PILOTS = settings.pilots.map(p => p.name);
 }
 
-const TEMPLATES_VERSION = 8;
+const TEMPLATES_VERSION = 9;
 
 const DEFAULT_SETTINGS = {
   termsLink: 'https://ufly.co.il/%d7%90%d7%99%d7%a9%d7%95%d7%a8-%d7%aa%d7%a0%d7%90%d7%99-%d7%98%d7%99%d7%a1%d7%94/',
@@ -443,9 +443,8 @@ const DEFAULT_SETTINGS = {
   msgTemplatePostpone:
 `היי {שם}, בשל תנאי מזג האוויר לא ניתן לקיים את הטיסה במועד שתואם עבורך. אנא צור/י קשר לתאום מועד חדש 🙏🪂`,
   msgTemplateReview:
-`היי {שם}! 🪂
-טסתם איתנו בטרקטורון המעופף, היה כיף?
-נשמח אם תוכלו להקדיש כמה רגעים לדרג ולהמליץ עלינו בגוגל ⭐
+`טסתם איתנו בטרקטורון המעופף, היה כיף?
+נשמח אם תוכלו להקדיש כמה רגעים לדרג ולהמליץ עלינו בגוגל
 {קישור_ביקורת}`,
   pilotMsgTemplate:
 `היי {שם_טייס}, פנוי לטיסה ב-{תאריך}, {משך} דקות, בשעה {שעה}?`,
@@ -935,7 +934,7 @@ function render() {
             <span class="dur-badge">⏱️ ${f.duration} דק׳</span>
             ${f.count > 1 ? `<span class="dur-badge">🔁 ${f.count} טיסות</span>` : ''}
           </div>
-          <div class="card-contact">📞 <strong>${f.contact}</strong> <span>${f.phone || ''}</span></div>
+          <div class="card-contact">📞 <strong>${f.contact}</strong> ${f.phone ? `<a href="tel:${f.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()" style="color:#64748B;text-decoration:none">${f.phone}</a>` : ''}</div>
           ${f.email ? `<div class="card-notes">📧 ${f.email}</div>` : ''}
           ${f.source && f.source !== 'UFLY' ? `<div class="card-notes" style="color:#B45309;font-weight:600">✈️ טיסה של: ${f.source}</div>` : ''}
           <div class="card-options">✅ ${optsStr}</div>
