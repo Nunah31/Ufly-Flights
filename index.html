@@ -26,7 +26,8 @@
 
   .main { max-width: 640px; margin: 0 auto; padding: 14px 12px 80px; }
 
-  .filters { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; }
+  .filters { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+  .filters::-webkit-scrollbar { display: none; }
   .filter-btn { padding: 7px 10px; border-radius: 20px; border: none; cursor: pointer; font-size: 14px; font-family: inherit; background: #E2E8F0; color: #374151; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
   .filter-btn.active { background: #0EA5E9; color: white; font-weight: 600; }
 
@@ -724,6 +725,7 @@ async function togglePostpone(id) {
   const idx = flights.findIndex(x => x.id === id);
   if (idx < 0) return;
   flights[idx].postponed = !flights[idx].postponed;
+  const nowPostponed = flights[idx].postponed;
   saveFlights();
   render();
   // Update calendar event title if exists
@@ -736,6 +738,8 @@ async function togglePostpone(id) {
     setTimeout(() => indicator.classList.remove('visible'), 2000);
     render();
   }
+  // Marking as postponed also opens the postponement message to send the client
+  if (nowPostponed) openPostpone(id);
 }
 
 function buildCalEvent(f) {
@@ -947,8 +951,7 @@ function render() {
         <button class="icon-btn" onclick="openEdit(${f.id})">✏️</button>
         <button class="icon-btn${f.calNeedsTermsUpdate?' cal-needs-update':''}" onclick="handleCalClick(${f.id})" title="${f.calNeedsTermsUpdate?'עדכן יומן — התקבל אישור תנאים':f.calEventId?'עדכן אירוע ביומן':'הוסף ליומן'}">${f.calNeedsTermsUpdate?'📅⚡':f.calEventId?'📅✅':'📅'}</button>
         <button class="icon-btn" onclick="openSend(${f.id})" title="שלח ללקוח" style="font-size:24px">✉️</button>
-        <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה'}">${f.postponed?'❌✓':'❌'}</button>
-        <button class="icon-btn" onclick="openPostpone(${f.id})" title="שלח הודעת דחייה" style="font-size:26px">🧧</button>
+        <button class="icon-btn${f.postponed?' active':''}" onclick="togglePostpone(${f.id})" title="${f.postponed?'בטל דחייה':'סמן כנדחתה ושלח הודעה ללקוח'}" style="font-size:22px">${f.postponed?'❌✓':'❌'}</button>
         <button class="icon-btn" onclick="logFlightToDiary(${f.id})" title="${f.loggedToDiary?'בוצעה ✓ — שלח שוב?':'סמן כבוצעה ושלח ליומן טיסות'}" style="${f.loggedToDiary?'background:#D1FAE5;color:#065F46':''}">✅</button>
       </div>
     </div>`;
