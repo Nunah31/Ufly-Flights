@@ -55,9 +55,9 @@
   .badge { font-size: 13px; padding: 3px 9px; border-radius: 10px; font-weight: 500; border: 1px solid; }
   .dur-badge { font-size: 17px; font-weight: 600; padding: 4px 10px; border-radius: 10px; background: #F0F9FF; color: #0369A1; }
   .card-contact { font-size: 18px; color: #111827; }
-  .card-contact span, .card-contact a { color: #64748B; font-size: 17px; }
+  .card-contact span, .card-contact a { color: #7C3AED; font-size: 17px; }
   .card-options { font-size: 16px; color: #7C3AED; margin-top: 3px; }
-  .card-notes { font-size: 15px; color: #9CA3AF; margin-top: 4px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-notes { font-size: 15px; color: #111827; margin-top: 4px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .card-actions { display: flex; flex-direction: row; gap: 5px; padding: 0 14px 10px; }
   .icon-btn { flex: 1; background: #F0F9FF; border: none; border-radius: 7px; padding: 7px 4px; cursor: pointer; font-size: 17px; line-height: 1; text-decoration: none; display: block; text-align: center; }
@@ -934,7 +934,7 @@ function render() {
             <span class="dur-badge">⏱️ ${f.duration} דק׳</span>
             ${f.count > 1 ? `<span class="dur-badge">🔁 ${f.count} טיסות</span>` : ''}
           </div>
-          <div class="card-contact">📞 <strong>${f.contact}</strong> ${f.phone ? `<a href="tel:${f.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()" style="color:#64748B;text-decoration:none">${f.phone}</a>` : ''}</div>
+          <div class="card-contact">📞 <strong>${f.contact}</strong> ${f.phone ? `<a href="tel:${f.phone.replace(/\D/g,'')}" onclick="event.stopPropagation()" style="text-decoration:none;font-weight:600">${f.phone}</a>` : ''}</div>
           ${f.email ? `<div class="card-notes">📧 ${f.email}</div>` : ''}
           ${f.source && f.source !== 'UFLY' ? `<div class="card-notes" style="color:#B45309;font-weight:600">✈️ טיסה של: ${f.source}</div>` : ''}
           <div class="card-options">✅ ${optsStr}</div>
