@@ -439,5 +439,31 @@
     "id": 20,
     "calEventId": "u4c9qgpr6mrkmmmcdu1r3jvac0",
     "termsReceived": true
+  },
+  {
+    "date": "2026-06-26",
+    "time": "19:00",
+    "contact": "רון קרואני",
+    "phone": "+972 54-569-5856",
+    "duration": 30,
+    "count": 2,
+    "email": "",
+    "notes": "ביט שולם למספר של אסתר",
+    "paymentMethods": [
+      "ביט",
+      "פייבוקס"
+    ],
+    "paymentMethod": "ביט",
+    "paymentDate": "2026-06-26",
+    "source": "UFLY",
+    "pilots": [
+      "דור",
+      "אביעד"
+    ],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 21,
+    "calEventId": null
   }
 ]
