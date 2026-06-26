@@ -463,17 +463,13 @@
     "paymentDate": "2026-06-26",
     "source": "UFLY",
     "pilots": [
-      "דור",
-      "אביעד"
+      "דור"
     ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 21,
     "calEventId": "i9t3sffofmm41pe5crffbt6ni4",
-    "termsReceived": true,
-    "calNeedsTermsUpdate": false,
-    "loggedToDiary": true,
-    "loggedDate": "2026-06-26"
+    "termsReceived": true
   }
 ]
