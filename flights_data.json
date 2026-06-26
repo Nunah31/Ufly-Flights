@@ -272,7 +272,9 @@
     "id": 13,
     "calEventId": "lflop042u6l8ncqeq8uf11leh0",
     "termsReceived": true,
-    "postponed": false
+    "postponed": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-26"
   },
   {
     "date": "2026-06-26",
@@ -465,6 +467,7 @@
     "pilotDay": false,
     "id": 21,
     "calEventId": "i9t3sffofmm41pe5crffbt6ni4",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   }
 ]
