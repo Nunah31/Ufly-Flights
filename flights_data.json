@@ -447,7 +447,7 @@
     "phone": "+972 54-569-5856",
     "duration": 30,
     "count": 2,
-    "email": "",
+    "email": "roniron12321@gmail.com",
     "notes": "ביט שולם למספר של אסתר",
     "paymentMethods": [
       "ביט",
@@ -464,6 +464,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 21,
-    "calEventId": "i9t3sffofmm41pe5crffbt6ni4"
+    "calEventId": "i9t3sffofmm41pe5crffbt6ni4",
+    "termsReceived": true
   }
 ]
