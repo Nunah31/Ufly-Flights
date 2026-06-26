@@ -470,6 +470,8 @@
     "id": 21,
     "calEventId": "i9t3sffofmm41pe5crffbt6ni4",
     "termsReceived": true,
-    "calNeedsTermsUpdate": false
+    "calNeedsTermsUpdate": false,
+    "loggedToDiary": true,
+    "loggedDate": "2026-06-26"
   }
 ]
