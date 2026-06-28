@@ -473,5 +473,27 @@
     "termsReceived": true,
     "loggedToDiary": true,
     "loggedDate": "2026-06-26"
+  },
+  {
+    "date": "2026-07-07",
+    "time": "08:00",
+    "contact": "נעמי פודור אלקובי",
+    "phone": "+972 52-281-1708",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [
+      "שובר"
+    ],
+    "paymentMethod": "שובר",
+    "paymentDate": "2026-06-28",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 22,
+    "calEventId": null
   }
 ]
