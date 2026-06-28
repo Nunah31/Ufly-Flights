@@ -396,7 +396,8 @@
     "pilotDay": false,
     "id": 18,
     "calEventId": "630d5lutpj324rg4f4e6av00i8",
-    "termsReceived": true
+    "termsReceived": true,
+    "postponed": true
   },
   {
     "date": "2026-06-29",
