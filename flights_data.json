@@ -481,7 +481,7 @@
     "phone": "+972 52-281-1708",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "foalnomi1966@gmail.com",
     "notes": "",
     "paymentMethods": [
       "שובר"
@@ -494,6 +494,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 22,
-    "calEventId": "4lbr1stho0cugbpm6uq1176q7o"
+    "calEventId": "4lbr1stho0cugbpm6uq1176q7o",
+    "termsReceived": true
   }
 ]
