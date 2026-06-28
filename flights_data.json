@@ -499,5 +499,30 @@
     "id": 22,
     "calEventId": "4lbr1stho0cugbpm6uq1176q7o",
     "termsReceived": true
+  },
+  {
+    "date": "2026-06-29",
+    "time": "18:00",
+    "contact": "רחל דמארי",
+    "phone": "0505897885",
+    "duration": 10,
+    "count": 13,
+    "email": "",
+    "notes": "תשלום במזומן לפני הטיסה",
+    "paymentMethods": [
+      "מזומן"
+    ],
+    "paymentMethod": "מזומן",
+    "paymentDate": "2026-06-28",
+    "source": "UFLY",
+    "pilots": [
+      "דור",
+      "יריב"
+    ],
+    "photo": false,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 23,
+    "calEventId": null
   }
 ]
