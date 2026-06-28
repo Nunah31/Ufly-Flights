@@ -507,7 +507,7 @@
     "phone": "0505897885",
     "duration": 10,
     "count": 13,
-    "email": "",
+    "email": "rdrd23000@gmail.com",
     "notes": "תשלום במזומן לפני הטיסה",
     "paymentMethods": [
       "מזומן"
@@ -523,6 +523,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 23,
-    "calEventId": null
+    "calEventId": null,
+    "termsReceived": true
   }
 ]
