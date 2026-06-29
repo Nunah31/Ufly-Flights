@@ -508,9 +508,10 @@
     "duration": 10,
     "count": 10,
     "email": "r0529787700@gmail.com",
-    "notes": "תשלום במזומן לפני הטיסה",
+    "notes": "500 שח מזומן",
     "paymentMethods": [
-      "מזומן"
+      "מזומן",
+      "העברה בנקאית"
     ],
     "paymentMethod": "מזומן",
     "paymentDate": "2026-06-28",
