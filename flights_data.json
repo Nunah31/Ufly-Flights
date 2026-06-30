@@ -534,7 +534,7 @@
     "phone": "+972 54-580-0798",
     "duration": 40,
     "count": 2,
-    "email": "",
+    "email": "barkayguy@gmail.com",
     "notes": "שולם בביט של אסתר",
     "paymentMethods": [
       "ביט"
@@ -547,6 +547,7 @@
     "photo360": false,
     "pilotDay": false,
     "id": 24,
-    "calEventId": "6ctu8i7st5tifihpo2oriplchs"
+    "calEventId": "6ctu8i7st5tifihpo2oriplchs",
+    "termsReceived": true
   }
 ]
