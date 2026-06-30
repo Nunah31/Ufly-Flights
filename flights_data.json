@@ -526,5 +526,27 @@
     "id": 23,
     "calEventId": "38hp0ge0nuvtv8j2hl5r5ddi0g",
     "termsReceived": true
+  },
+  {
+    "date": "2026-07-11",
+    "time": "19:00",
+    "contact": "גיא ברקאי",
+    "phone": "+972 54-580-0798",
+    "duration": 40,
+    "count": 2,
+    "email": "",
+    "notes": "שולם בביט של אסתר",
+    "paymentMethods": [
+      "ביט"
+    ],
+    "paymentMethod": "ביט",
+    "paymentDate": "2026-06-30",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 24,
+    "calEventId": null
   }
 ]
