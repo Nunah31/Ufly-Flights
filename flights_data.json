@@ -564,12 +564,15 @@
     "paymentMethod": null,
     "paymentDate": "2026-07-02",
     "source": "UFLY",
-    "pilots": [],
+    "pilots": [
+      "שרון"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 25,
-    "calEventId": null
+    "calEventId": null,
+    "termsReceived": false
   },
   {
     "date": "2026-07-06",
