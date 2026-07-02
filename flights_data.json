@@ -542,14 +542,15 @@
     "paymentMethod": "ביט",
     "paymentDate": "2026-06-30",
     "source": "UFLY",
-    "pilots": [],
+    "pilots": [
+      "שרון"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 24,
     "calEventId": "6ctu8i7st5tifihpo2oriplchs",
-    "termsReceived": true,
-    "calNeedsTermsUpdate": false
+    "termsReceived": true
   },
   {
     "date": "2026-07-06",
