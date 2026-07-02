@@ -548,6 +548,27 @@
     "pilotDay": false,
     "id": 24,
     "calEventId": "6ctu8i7st5tifihpo2oriplchs",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
+  },
+  {
+    "date": "2026-07-06",
+    "time": "18:30",
+    "contact": "אלמה",
+    "phone": "0547830125",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-07-02",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 25,
+    "calEventId": null
   }
 ]
