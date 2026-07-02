@@ -587,11 +587,15 @@
     "paymentMethod": null,
     "paymentDate": "2026-07-02",
     "source": "UFLY",
-    "pilots": [],
+    "pilots": [
+      "דור",
+      "אביעד"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 26,
-    "calEventId": null
+    "calEventId": null,
+    "termsReceived": false
   }
 ]
