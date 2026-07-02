@@ -584,13 +584,15 @@
     "count": 3,
     "email": "",
     "notes": "",
-    "paymentMethods": [],
-    "paymentMethod": null,
+    "paymentMethods": [
+      "העברה בנקאית"
+    ],
+    "paymentMethod": "העברה בנקאית",
     "paymentDate": "2026-07-02",
     "source": "UFLY",
     "pilots": [
       "דור",
-      "אביעד"
+      "שרון"
     ],
     "photo": true,
     "photo360": false,
