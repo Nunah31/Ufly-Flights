@@ -559,7 +559,7 @@
     "phone": "0547830125",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "almiwa1951@gmail.com",
     "notes": "",
     "paymentMethods": [
       "העברה בנקאית"
@@ -575,7 +575,7 @@
     "pilotDay": false,
     "id": 25,
     "calEventId": "qtpf0gm8o12qm45hh7gg8jjb9c",
-    "termsReceived": false
+    "termsReceived": true
   },
   {
     "date": "2026-07-06",
