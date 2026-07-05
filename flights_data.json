@@ -604,5 +604,29 @@
     "id": 26,
     "calEventId": "5o1leh126vaf1pi5h93j7h0hkk",
     "termsReceived": false
+  },
+  {
+    "date": "2026-07-06",
+    "time": "19:00",
+    "contact": "ראוף איברהים",
+    "phone": "+972 54-864-8512",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "שולם בביט של אסתר",
+    "paymentMethods": [
+      "ביט"
+    ],
+    "paymentMethod": "ביט",
+    "paymentDate": "2026-07-05",
+    "source": "UFLY",
+    "pilots": [
+      "דור"
+    ],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 27,
+    "calEventId": null
   }
 ]
