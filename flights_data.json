@@ -629,5 +629,29 @@
     "id": 27,
     "calEventId": "6311a2as087q2ouque6u2cv9u0",
     "termsReceived": true
+  },
+  {
+    "date": "2026-07-08",
+    "time": "19:00",
+    "contact": "אייל משולם",
+    "phone": "+972 52-842-5777",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [
+      "פייבוקס"
+    ],
+    "paymentMethod": "פייבוקס",
+    "paymentDate": "2026-07-06",
+    "source": "UFLY",
+    "pilots": [
+      "שרון"
+    ],
+    "photo": false,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 28,
+    "calEventId": null
   }
 ]
