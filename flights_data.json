@@ -653,5 +653,29 @@
     "pilotDay": false,
     "id": 28,
     "calEventId": "u4rubebht50q53lvpv8ggn9v2s"
+  },
+  {
+    "date": "2026-07-09",
+    "time": "19:00",
+    "contact": "מרוואה בדארנה",
+    "phone": "+972 50-996-1776",
+    "duration": 30,
+    "count": 1,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [
+      "פייבוקס"
+    ],
+    "paymentMethod": "פייבוקס",
+    "paymentDate": "2026-07-06",
+    "source": "UFLY",
+    "pilots": [
+      "שרון"
+    ],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 29,
+    "calEventId": null
   }
 ]
