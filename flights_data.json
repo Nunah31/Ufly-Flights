@@ -679,5 +679,25 @@
     "pilotDay": false,
     "id": 29,
     "calEventId": "0du7ec8u8vdog77nt2o97415g8"
+  },
+  {
+    "date": "2026-08-02",
+    "time": "17:00",
+    "contact": "נוסבכר",
+    "phone": "+972 52-555-3301",
+    "duration": 10,
+    "count": 60,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-07-08",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": false,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 30,
+    "calEventId": null
   }
 ]
