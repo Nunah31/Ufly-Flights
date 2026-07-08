@@ -638,7 +638,7 @@
     "phone": "+972 52-842-5777",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "Eyalmesh@gmail.com",
     "notes": "",
     "paymentMethods": [
       "פייבוקס"
@@ -653,7 +653,8 @@
     "photo360": false,
     "pilotDay": false,
     "id": 28,
-    "calEventId": "u4rubebht50q53lvpv8ggn9v2s"
+    "calEventId": "u4rubebht50q53lvpv8ggn9v2s",
+    "termsReceived": true
   },
   {
     "date": "2026-07-09",
