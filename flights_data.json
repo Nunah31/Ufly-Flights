@@ -544,7 +544,8 @@
     "paymentDate": "2026-06-30",
     "source": "UFLY",
     "pilots": [
-      "שרון"
+      "שרון",
+      "דור"
     ],
     "photo": true,
     "photo360": false,
