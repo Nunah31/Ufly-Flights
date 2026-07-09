@@ -678,7 +678,9 @@
     "photo360": false,
     "pilotDay": false,
     "id": 29,
-    "calEventId": "0du7ec8u8vdog77nt2o97415g8"
+    "calEventId": "0du7ec8u8vdog77nt2o97415g8",
+    "termsReceived": true,
+    "calNeedsTermsUpdate": true
   },
   {
     "date": "2026-08-02",
