@@ -701,5 +701,27 @@
     "pilotDay": false,
     "id": 30,
     "calEventId": "9ggeq5t8dssi4q9hjdqjenpk80"
+  },
+  {
+    "date": "2026-08-24",
+    "time": "18:00",
+    "contact": "הודיה דוכן",
+    "phone": "+972 55-687-5921",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "0583218004 הודיה",
+    "paymentMethods": [
+      "שובר"
+    ],
+    "paymentMethod": "שובר",
+    "paymentDate": "2026-07-12",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 31,
+    "calEventId": null
   }
 ]
