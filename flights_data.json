@@ -373,7 +373,7 @@
     "termsReceived": false
   },
   {
-    "date": "2026-06-30",
+    "date": "2026-09-09",
     "time": "19:00",
     "contact": "אלון אלטשטוק",
     "phone": "+972 52-833-7599",
@@ -396,8 +396,7 @@
     "pilotDay": false,
     "id": 18,
     "calEventId": "630d5lutpj324rg4f4e6av00i8",
-    "termsReceived": true,
-    "postponed": true
+    "termsReceived": true
   },
   {
     "date": "2026-06-29",
@@ -723,6 +722,7 @@
     "pilotDay": false,
     "id": 31,
     "calEventId": "cu91mo6ffc7duujj31bl492irs",
-    "termsReceived": true
+    "termsReceived": true,
+    "calNeedsTermsUpdate": false
   }
 ]
