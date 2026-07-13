@@ -768,5 +768,25 @@
     "pilotDay": false,
     "id": 33,
     "calEventId": "r2v5bteatroah1lnk4bc9bnkg8"
+  },
+  {
+    "date": "2026-07-14",
+    "time": "18:00",
+    "contact": "ניתאי",
+    "phone": "+972 52-377-7003",
+    "duration": 40,
+    "count": 2,
+    "email": "",
+    "notes": "",
+    "paymentMethods": [],
+    "paymentMethod": null,
+    "paymentDate": "2026-07-13",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 34,
+    "calEventId": null
   }
 ]
