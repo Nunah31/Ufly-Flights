@@ -724,5 +724,27 @@
     "calEventId": "cu91mo6ffc7duujj31bl492irs",
     "termsReceived": true,
     "calNeedsTermsUpdate": false
+  },
+  {
+    "date": "2026-08-11",
+    "time": "18:00",
+    "contact": "אלכסיי גברילוב",
+    "phone": "050-8354660",
+    "duration": 40,
+    "count": 1,
+    "email": "",
+    "notes": "QZ6R-9XWL-Q4E9-SQK9",
+    "paymentMethods": [
+      "שובר"
+    ],
+    "paymentMethod": "שובר",
+    "paymentDate": "2026-07-13",
+    "source": "UFLY",
+    "pilots": [],
+    "photo": true,
+    "photo360": false,
+    "pilotDay": false,
+    "id": 32,
+    "calEventId": null
   }
 ]
