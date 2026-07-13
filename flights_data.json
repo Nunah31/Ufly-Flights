@@ -772,21 +772,27 @@
   {
     "date": "2026-07-14",
     "time": "18:00",
-    "contact": "ניתאי",
+    "contact": "ניתאי אלוש אבן",
     "phone": "+972 52-377-7003",
     "duration": 40,
     "count": 2,
     "email": "",
-    "notes": "",
-    "paymentMethods": [],
-    "paymentMethod": null,
+    "notes": "שולם בביט של אסתר",
+    "paymentMethods": [
+      "ביט"
+    ],
+    "paymentMethod": "ביט",
     "paymentDate": "2026-07-13",
     "source": "UFLY",
-    "pilots": [],
+    "pilots": [
+      "דור",
+      "שרון"
+    ],
     "photo": true,
     "photo360": false,
     "pilotDay": false,
     "id": 34,
-    "calEventId": null
+    "calEventId": null,
+    "termsReceived": false
   }
 ]
