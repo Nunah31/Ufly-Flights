@@ -750,7 +750,7 @@
     "phone": "+972 52-377-7003",
     "duration": 40,
     "count": 2,
-    "email": "",
+    "email": "benben1948@gmail.com",
     "notes": "שולם בביט של אסתר",
     "paymentMethods": [
       "ביט"
@@ -767,6 +767,6 @@
     "pilotDay": false,
     "id": 34,
     "calEventId": "lm16sjl8lr8urtaocmadnolcb4",
-    "termsReceived": false
+    "termsReceived": true
   }
 ]
