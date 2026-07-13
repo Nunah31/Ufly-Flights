@@ -423,32 +423,6 @@
     "postponed": true
   },
   {
-    "date": "2026-06-30",
-    "time": "18:00",
-    "contact": "אהד שני דבורי",
-    "phone": "+972 50-912-2296",
-    "duration": 40,
-    "count": 2,
-    "email": "dvorito76@gmail.com",
-    "notes": "",
-    "paymentMethods": [
-      "העברה בנקאית"
-    ],
-    "paymentMethod": "העברה בנקאית",
-    "paymentDate": "2026-06-24",
-    "source": "UFLY",
-    "pilots": [
-      "שרון"
-    ],
-    "photo": true,
-    "photo360": false,
-    "pilotDay": false,
-    "id": 20,
-    "calEventId": "u4c9qgpr6mrkmmmcdu1r3jvac0",
-    "termsReceived": true,
-    "postponed": true
-  },
-  {
     "date": "2026-06-26",
     "time": "19:00",
     "contact": "רון קרואני",
