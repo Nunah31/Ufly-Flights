@@ -1434,7 +1434,7 @@ function openSend(id) {
   const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
 
   document.getElementById('send-body').innerHTML = MSG_SECTIONS.map(sec => {
-    const msg = sec.key === 'greeting' ? `היי ${f.contact} :)` : fillTemplate(settings[sec.templateKey] || '', f);
+    const msg = sec.key === 'greeting' ? `היי ${f.contact.trim().split(/\s+/)[0]}` : fillTemplate(settings[sec.templateKey] || '', f);
     const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
     return `
     <div class="send-section-title">${sec.title}</div>
