@@ -1419,6 +1419,7 @@ function fillTemplate(template, f) {
 }
 
 const MSG_SECTIONS = [
+  { key: 'greeting', title: '👋 היי [שם]',               templateKey: null },
   { key: 'details',  title: '1️⃣ פרטי הטיסה',          templateKey: 'msgTemplateDetails' },
   { key: 'terms',    title: '2️⃣ אישור תנאי טיסה',     templateKey: 'msgTemplateTerms' },
   { key: 'location', title: '3️⃣ מיקום המנחת',          templateKey: 'msgTemplateLocation' },
@@ -1433,7 +1434,7 @@ function openSend(id) {
   const phoneDigits = (f.phone || '').replace(/\D/g,'').replace(/^0/, '972');
 
   document.getElementById('send-body').innerHTML = MSG_SECTIONS.map(sec => {
-    const msg = fillTemplate(settings[sec.templateKey] || '', f);
+    const msg = sec.key === 'greeting' ? `היי ${f.contact} :)` : fillTemplate(settings[sec.templateKey] || '', f);
     const waHref = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(msg)}`;
     return `
     <div class="send-section-title">${sec.title}</div>
