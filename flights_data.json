@@ -706,7 +706,7 @@
     "phone": "050-8354660",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "Lochag1986@gmail.com",
     "notes": "QZ6R-9XWL-Q4E9-SQK9",
     "paymentMethods": [
       "שובר"
@@ -719,7 +719,8 @@
     "photo360": false,
     "pilotDay": false,
     "id": 32,
-    "calEventId": "06jp1acpl29h5h6ucn1ac50oec"
+    "calEventId": "06jp1acpl29h5h6ucn1ac50oec",
+    "termsReceived": true
   },
   {
     "date": "2026-08-21",
