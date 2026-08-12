@@ -1436,8 +1436,8 @@ function fillTemplate(template, f) {
   const [y,m,day] = f.date.split('-');
   let msg = template;
   const flightsPhrase = (f.count && f.count > 1)
-    ? `נקבעו עבורך ${f.count} טיסות חוויה`
-    : `נקבעה עבורך טיסת חוויה`;
+    ? `תואמו עבורך ${f.count} טיסות חוויה`
+    : `תואמה עבורך טיסת חוויה`;
   msg = msg.replaceAll('{נקבעה_הטיסה}', flightsPhrase);
   msg = msg.replaceAll('{שם}', f.contact || '');
   msg = msg.replaceAll('{תאריך}', `${day}/${m}/${y}`);
