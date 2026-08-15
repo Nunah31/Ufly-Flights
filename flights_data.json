@@ -729,7 +729,7 @@
     "phone": "+972 54-813-0997",
     "duration": 40,
     "count": 1,
-    "email": "",
+    "email": "Munitis23@gmail.com",
     "notes": "Q4rj-Flpw-sa9p-qjd8",
     "paymentMethods": [
       "שובר"
@@ -742,7 +742,8 @@
     "photo360": false,
     "pilotDay": false,
     "id": 33,
-    "calEventId": "r2v5bteatroah1lnk4bc9bnkg8"
+    "calEventId": "r2v5bteatroah1lnk4bc9bnkg8",
+    "termsReceived": true
   },
   {
     "date": "2026-07-14",
