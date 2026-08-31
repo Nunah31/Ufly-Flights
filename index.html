@@ -117,6 +117,25 @@
   .opt-count { display: flex; align-items: center; gap: 4px; margin-right: auto; }
   .opt-count button { width: 24px; height: 24px; border-radius: 5px; border: 1px solid #BAE6FD; background: white; color: #0369A1; font-size: 16px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .opt-count span { min-width: 20px; text-align: center; font-weight: 700; font-size: 15px; color: #0369A1; }
+
+  /* ── Invoice screen ── */
+  #invoice-screen { display:none; position:fixed; inset:0; background:#F0F4FF; z-index:1000; direction:rtl; overflow-y:auto; }
+  .inv-header { background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%); padding: 18px 16px 14px; color: white; position:sticky; top:0; z-index:10; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .inv-header-inner { max-width:640px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
+  .inv-header h2 { font-size:22px; font-weight:700; }
+  .inv-header p { font-size:14px; opacity:0.75; margin-top:2px; }
+  .inv-body { max-width:640px; margin:0 auto; padding:14px 12px 80px; }
+  .inv-pilots { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .inv-pilot-btn { padding:7px 14px; border-radius:20px; border:none; cursor:pointer; font-size:14px; font-family:inherit; background:#E9D5FF; color:#4C1D95; font-weight:600; transition:all 0.15s; }
+  .inv-pilot-btn.active { background:#7C3AED; color:white; }
+  .inv-flight-row { background:white; border-radius:14px; padding:14px 16px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,0.08); display:flex; align-items:center; gap:12px; cursor:pointer; }
+  .inv-flight-row.done { background:#F3FFF4; }
+  .inv-flight-info { flex:1; min-width:0; }
+  .inv-flight-name { font-size:16px; font-weight:700; color:#1E293B; }
+  .inv-flight-meta { font-size:13px; color:#6B7280; margin-top:2px; }
+  .inv-flight-pilot { font-size:13px; font-weight:600; color:#7C3AED; margin-top:2px; }
+  .inv-cb { width:26px; height:26px; flex-shrink:0; accent-color:#7C3AED; cursor:pointer; }
+  .inv-empty { text-align:center; color:#9CA3AF; padding:40px 16px; font-size:15px; }
   .opt-check { width: 20px; height: 20px; border-radius: 5px; border: 2px solid #CBD5E1; background: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.12s; }
   .opt-item.selected .opt-check { background: #0EA5E9; border-color: #0EA5E9; color: white; }
   .opt-name { font-size: 15px; color: #1E293B; flex: 1; }
@@ -189,6 +208,7 @@
       <p id="flight-count"></p>
     </div>
     <div style="display:flex;gap:8px">
+      <button class="btn-export" onclick="openInvoices()" title="חשבוניות טייסים">🧾</button>
       <button class="btn-export" onclick="openSettings()" title="הגדרות">⚙️</button>
       <button class="btn-add" onclick="openAdd()">➕ טיסה חדשה</button>
     </div>
@@ -502,9 +522,11 @@ function closeTopOverlay() {
   const sendPanel = document.getElementById('send-panel');
   const modal = document.getElementById('modal');
   const settingsModal = document.getElementById('settings-modal');
+  const invoiceScreen = document.getElementById('invoice-screen');
   if (sendPanel && sendPanel.classList.contains('open')) { closeSend(); return true; }
   if (modal && modal.classList.contains('open')) { closeModal(); return true; }
   if (settingsModal && settingsModal.style.display === 'flex') { closeSettings(); return true; }
+  if (invoiceScreen && invoiceScreen.style.display !== 'none') { closeInvoices(); return true; }
   return false;
 }
 
@@ -1681,6 +1703,87 @@ function saveToken() {
   document.getElementById('token-setup').style.display = 'none';
   init();
 }
+
+// ── Invoice screen ─────────────────────────────────────────────────────────
+let invPilotFilter = 'all';
+
+function openInvoices() {
+  document.getElementById('invoice-screen').style.display = 'block';
+  renderInvoices();
+}
+
+function closeInvoices() {
+  document.getElementById('invoice-screen').style.display = 'none';
+}
+
+function getPilotFlights() {
+  const today = new Date().toISOString().slice(0, 10);
+  return flights.filter(f => f.source && f.source !== 'UFLY' && f.date < today && !f.postponed);
+}
+
+function renderInvoices() {
+  const pilotFlights = getPilotFlights();
+  const pilots = [...new Set(pilotFlights.map(f => f.source))].sort();
+
+  // Pilot filter buttons
+  const filtersEl = document.getElementById('inv-pilot-filters');
+  filtersEl.innerHTML = `
+    <button class="inv-pilot-btn${invPilotFilter === 'all' ? ' active' : ''}" onclick="setInvPilot('all')">הכל</button>
+    ${pilots.map(p => `<button class="inv-pilot-btn${invPilotFilter === p ? ' active' : ''}" onclick="setInvPilot('${p.replace(/'/g,"\\'")}')"> ${p}</button>`).join('')}
+  `;
+
+  // Filter flights
+  const filtered = invPilotFilter === 'all'
+    ? pilotFlights
+    : pilotFlights.filter(f => f.source === invPilotFilter);
+
+  // Sort: not received first, then by date desc
+  const sorted = [...filtered].sort((a, b) => {
+    if (!!a.invoiceReceived !== !!b.invoiceReceived) return a.invoiceReceived ? 1 : -1;
+    return b.date.localeCompare(a.date);
+  });
+
+  // Stats
+  const received = filtered.filter(f => f.invoiceReceived).length;
+  document.getElementById('inv-subtitle').textContent =
+    `${filtered.length} טיסות · ${received} חשבוניות התקבלו`;
+
+  const listEl = document.getElementById('inv-list');
+  if (sorted.length === 0) {
+    listEl.innerHTML = `<div class="inv-empty">אין טיסות עבר של טייסים אחרים</div>`;
+    return;
+  }
+
+  listEl.innerHTML = sorted.map(f => {
+    const [y, m, d] = f.date.split('-');
+    const dateStr = `${d}/${m}/${y}`;
+    const timeStr = f.time || '';
+    const meta = [dateStr, timeStr, f.count > 1 ? `${f.count} טיסות` : ''].filter(Boolean).join(' · ');
+    return `
+      <div class="inv-flight-row${f.invoiceReceived ? ' done' : ''}" onclick="toggleInvoice(${f.id})">
+        <div class="inv-flight-info">
+          <div class="inv-flight-name">${f.contact || '(ללא שם)'}</div>
+          <div class="inv-flight-meta">${meta}</div>
+          <div class="inv-flight-pilot">✈️ ${f.source}</div>
+        </div>
+        <input type="checkbox" class="inv-cb" ${f.invoiceReceived ? 'checked' : ''}
+          onclick="event.stopPropagation();toggleInvoice(${f.id})" readonly>
+      </div>`;
+  }).join('');
+}
+
+function setInvPilot(name) {
+  invPilotFilter = name;
+  renderInvoices();
+}
+
+function toggleInvoice(id) {
+  const idx = flights.findIndex(f => f.id === id);
+  if (idx === -1) return;
+  flights[idx].invoiceReceived = !flights[idx].invoiceReceived;
+  saveFlights();
+  renderInvoices();
+}
 </script>
 
 <!-- Token setup (first time) -->
@@ -1758,6 +1861,23 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+
+<!-- Invoice Screen -->
+<div id="invoice-screen">
+  <div class="inv-header">
+    <div class="inv-header-inner">
+      <div>
+        <h2>🧾 חשבוניות טייסים</h2>
+        <p id="inv-subtitle">טיסות עבר של טייסים אחרים</p>
+      </div>
+      <button onclick="closeInvoices()" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.5);border-radius:10px;padding:10px 16px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit">✕ סגור</button>
+    </div>
+  </div>
+  <div class="inv-body">
+    <div class="inv-pilots" id="inv-pilot-filters"></div>
+    <div id="inv-list"></div>
+  </div>
+</div>
 
 <!-- Time Picker -->
 <div class="tp-overlay" id="tp-overlay" onclick="tpOverlayClick(event)">
