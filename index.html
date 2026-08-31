@@ -1751,7 +1751,7 @@ function renderInvoices() {
   const filtersEl = document.getElementById('inv-pilot-filters');
   filtersEl.innerHTML = `
     <button class="inv-pilot-btn${invPilotFilter === 'all' ? ' active' : ''}" onclick="setInvPilot('all')">הכל</button>
-    ${pilots.map(p => `<button class="inv-pilot-btn${invPilotFilter === p ? ' active' : ''}" onclick="setInvPilot(${JSON.stringify(p)})">${p}</button>`).join('')}
+    ${pilots.map(p => `<button class="inv-pilot-btn${invPilotFilter === p ? ' active' : ''}" data-pilot="${p.replace(/"/g,'&quot;')}" onclick="setInvPilot(this.dataset.pilot)">${p}</button>`).join('')}
   `;
 
   // Filter entries
@@ -1785,15 +1785,17 @@ function renderInvoices() {
     const meta = [dateStr, timeStr, f.count > 1 ? `${f.count} טיסות` : ''].filter(Boolean).join(' · ');
     const done = getInvoiceStatus(f, pilot);
     const key = JSON.stringify({id: f.id, pilot});
+    const esc = pilot.replace(/"/g,'&quot;');
     return `
-      <div class="inv-flight-row${done ? ' done' : ''}" onclick="toggleInvoice(${f.id}, ${JSON.stringify(pilot)})">
+      <div class="inv-flight-row${done ? ' done' : ''}" data-fid="${f.id}" data-pilot="${esc}" onclick="toggleInvoice(+this.dataset.fid, this.dataset.pilot)">
         <div class="inv-flight-info">
           <div class="inv-flight-name">${f.contact || '(ללא שם)'}</div>
           <div class="inv-flight-meta">${meta}</div>
           <div class="inv-flight-pilot">✈️ ${pilot}</div>
         </div>
         <input type="checkbox" class="inv-cb" ${done ? 'checked' : ''}
-          onclick="event.stopPropagation();toggleInvoice(${f.id}, ${JSON.stringify(pilot)})" readonly>
+          data-fid="${f.id}" data-pilot="${esc}"
+          onclick="event.stopPropagation();toggleInvoice(+this.dataset.fid, this.dataset.pilot)" readonly>
       </div>`;
   }).join('');
 }
