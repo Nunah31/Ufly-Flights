@@ -553,6 +553,13 @@ async function loadFromGithub() {
     for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const prevFlights = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     flights = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    // Merge invoicesByPilot from localStorage so it's never lost even if GitHub save failed
+    for (const f of flights) {
+      const local = prevFlights.find(p => p.id === f.id);
+      if (local && local.invoicesByPilot) {
+        f.invoicesByPilot = { ...local.invoicesByPilot, ...(f.invoicesByPilot || {}) };
+      }
+    }
     // queue flights that newly got termsReceived=true for calendar sync
     pendingCalTermsSync = flights.filter(f => {
       if (!f.calEventId || !f.termsReceived) return false;
@@ -577,7 +584,14 @@ async function saveToGithub() {
     const d = await r.json();
     fileSha = d.content?.sha;
     hideSaving();
-  } catch(e) { hideSaving(); }
+  } catch(e) {
+    // Save failed — keep data in localStorage so merge on next load can recover it
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(flights));
+    const el = document.getElementById('save-indicator');
+    el.textContent = '⚠️ לא נשמר בענן';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 3000);
+  }
 }
 
 function migrateSettings() {
