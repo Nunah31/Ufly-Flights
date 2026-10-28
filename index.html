@@ -552,13 +552,24 @@ async function loadFromGithub() {
     const bytes = new Uint8Array(binary.length);
     for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
     const prevFlights = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    flights = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    const remoteFlights = JSON.parse(new TextDecoder('utf-8').decode(bytes));
+    const remoteIds = new Set(remoteFlights.map(f => f.id));
+
+    // Keep local-only flights that didn't make it to GitHub (SHA conflict during save)
+    const localOnly = prevFlights.filter(f => f.id && !remoteIds.has(f.id));
+
+    flights = remoteFlights;
     // Merge invoicesByPilot from localStorage so it's never lost even if GitHub save failed
     for (const f of flights) {
       const local = prevFlights.find(p => p.id === f.id);
       if (local && local.invoicesByPilot) {
         f.invoicesByPilot = { ...local.invoicesByPilot, ...(f.invoicesByPilot || {}) };
       }
+    }
+    // Re-add local-only flights and immediately push to GitHub
+    if (localOnly.length > 0) {
+      flights.push(...localOnly);
+      setTimeout(() => saveToGithub(), 500);
     }
     // queue flights that newly got termsReceived=true for calendar sync
     pendingCalTermsSync = flights.filter(f => {
@@ -572,20 +583,44 @@ async function loadFromGithub() {
 
 async function saveToGithub() {
   showSaving();
-  const jsonStr = JSON.stringify(flights, null, 2);
-  const bytes = new TextEncoder().encode(jsonStr);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  const content = btoa(binary);
-  const body = { message: 'עדכון טיסות', content, ...(fileSha ? { sha: fileSha } : {}) };
+  const headers = { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' };
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`;
+
+  const buildContent = () => {
+    const jsonStr = JSON.stringify(flights, null, 2);
+    const bytes = new TextEncoder().encode(jsonStr);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  };
+
+  const tryPut = async (sha) => {
+    const body = { message: 'עדכון טיסות', content: buildContent(), ...(sha ? { sha } : {}) };
+    return fetch(url, { method: 'PUT', headers, body: JSON.stringify(body) });
+  };
+
   try {
-    const r = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${DATA_FILE}`,
-      { method: 'PUT', headers: { Authorization: `token ${GITHUB_TOKEN}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
-    fileSha = d.content?.sha;
-    hideSaving();
+    let r = await tryPut(fileSha);
+
+    // If conflict (409) or unprocessable (422) — fetch latest SHA and retry once
+    if (r.status === 409 || r.status === 422) {
+      const meta = await fetch(url, { headers });
+      if (meta.ok) {
+        const m = await meta.json();
+        fileSha = m.sha;
+        r = await tryPut(fileSha);
+      }
+    }
+
+    if (r.ok) {
+      const d = await r.json();
+      fileSha = d.content?.sha;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(flights));
+      hideSaving();
+    } else {
+      throw new Error(`HTTP ${r.status}`);
+    }
   } catch(e) {
-    // Save failed — keep data in localStorage so merge on next load can recover it
     localStorage.setItem(STORAGE_KEY, JSON.stringify(flights));
     const el = document.getElementById('save-indicator');
     el.textContent = '⚠️ לא נשמר בענן';
