@@ -1744,6 +1744,17 @@ async function init() {
   if (window.google) initGoogleAuth();
   else window.addEventListener('load', () => { if (window.google) initGoogleAuth(); });
 }
+// ── Auto-sync when app returns to foreground ──────────────────────────────
+let lastVisibilitySync = 0;
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden || !GITHUB_TOKEN) return;
+  const now = Date.now();
+  if (now - lastVisibilitySync < 30000) return; // לא יותר מפעם ב-30 שניות
+  lastVisibilitySync = now;
+  const ok = await loadFromGithub();
+  if (ok) render();
+});
+
 function saveToken() {
   const t = document.getElementById('token-input').value.trim();
   if (!t) return;
